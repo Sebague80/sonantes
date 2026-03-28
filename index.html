@@ -286,19 +286,13 @@ textarea.form-input{min-height:70px;resize:vertical}
 
     <!-- PANEL DOCENTE -->
     <div id="panel-docente">
-      <div id="register-fields" style="display:none">
-        <label class="form-label">Nombre</label>
-        <input class="form-input" id="auth-nombre" placeholder="Tu nombre">
-        <label class="form-label">Apellido</label>
-        <input class="form-input" id="auth-apellido" placeholder="Tu apellido">
-      </div>
+
       <label class="form-label">Email</label>
       <input class="form-input" id="auth-email" type="email" placeholder="tu@email.com">
       <label class="form-label">Contraseña</label>
       <input class="form-input" id="auth-password" type="password" placeholder="••••••••">
       <div class="err" id="auth-err"></div>
       <button class="btn btn-primary" id="auth-btn" style="width:100%;padding:10px" onclick="handleAuth()">Ingresar</button>
-      <div class="auth-toggle" onclick="toggleAuthMode()">¿Primera vez? <span id="auth-toggle-txt">Crear cuenta</span></div>
     </div>
 
     <!-- PANEL ALUMNO -->
@@ -1162,13 +1156,7 @@ function setEntryTab(t) {
 }
 
 // ── AUTH DOCENTE ──────────────────────────────────────────────
-function toggleAuthMode() {
-  authMode = authMode==='login'?'register':'login';
-  document.getElementById('register-fields').style.display = authMode==='register'?'block':'none';
-  document.getElementById('auth-btn').textContent = authMode==='login'?'Ingresar':'Crear cuenta';
-  document.getElementById('auth-toggle-txt').textContent = authMode==='login'?'Crear cuenta':'Ya tengo cuenta';
-  document.getElementById('auth-err').textContent='';
-}
+
 
 document.getElementById('auth-password').addEventListener('keydown',e=>{if(e.key==='Enter')handleAuth();});
 
@@ -1181,20 +1169,11 @@ async function handleAuth() {
   const btn=document.getElementById('auth-btn');
   btn.disabled=true; btn.textContent='…';
   try {
-    if(authMode==='login'){
-      const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
-      if(error)throw error;
-      await onLogin(data.user);
-    } else {
-      const nombre=document.getElementById('auth-nombre').value.trim();
-      if(!nombre){errEl.textContent='Ingresá tu nombre';return;}
-      const {data,error}=await sb.auth.signUp({email,password:pw});
-      if(error)throw error;
-      await sb.from('docentes').insert({id:data.user.id,nombre,apellido:document.getElementById('auth-apellido').value.trim()});
-      await onLogin(data.user);
-    }
-  } catch(e){errEl.textContent=e.message||'Error de autenticación';}
-  finally{btn.disabled=false;btn.textContent=authMode==='login'?'Ingresar':'Crear cuenta';}
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
+    if(error)throw error;
+    await onLogin(data.user);
+  } catch(e){errEl.textContent=e.message||'Email o contraseña incorrectos';}
+  finally{btn.disabled=false;btn.textContent='Ingresar';}
 }
 
 async function onLogin(user) {
