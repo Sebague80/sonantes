@@ -327,6 +327,8 @@ textarea.form-input{min-height:70px;resize:vertical}
         <div class="av-sm" id="footer-av">??</div>
         <div><div class="f-name" id="footer-name">…</div><div class="f-role" id="footer-role">Docente</div></div>
       </div>
+      <button class="logout-btn" onclick="abrirCambioPassword()" style="margin-bottom:6px;border-color:var(--border);color:var(--text2)">Cambiar contraseña</button>
+      <button class="logout-btn" onclick="abrirCambioPassword()" style="margin-bottom:6px;color:var(--text2)">Cambiar contraseña</button>
       <button class="logout-btn" onclick="confirmarLogout()">Cerrar sesión</button>
     </div>
   </aside>
@@ -1058,6 +1060,56 @@ textarea.form-input{min-height:70px;resize:vertical}
 
 <div class="toast" id="toast"></div>
 
+<!-- MODAL CAMBIO CONTRASEÑA -->
+<div class="modal-overlay" id="modal-password" onclick="if(event.target===this)closeModal('modal-password')">
+  <div class="modal" style="width:400px">
+    <div class="modal-header">
+      <div><div class="modal-title">Cambiar contraseña</div><div class="modal-sub">Ingresá tu nueva contraseña</div></div>
+      <button class="btn btn-ghost" style="padding:2px 8px" onclick="closeModal('modal-password')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nueva contraseña</label>
+        <input class="form-input" type="password" id="new-password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirmar contraseña</label>
+        <input class="form-input" type="password" id="confirm-password" placeholder="Repetí la contraseña">
+      </div>
+      <div id="password-err" style="font-size:12px;color:var(--red);min-height:16px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-password')">Cancelar</button>
+      <button class="btn btn-primary" onclick="cambiarPassword()">Guardar contraseña</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CAMBIO CONTRASEÑA -->
+<div class="modal-overlay" id="modal-password" onclick="if(event.target===this)closeModal('modal-password')">
+  <div class="modal" style="width:400px">
+    <div class="modal-header">
+      <div><div class="modal-title">Cambiar contraseña</div><div class="modal-sub">Ingresá tu nueva contraseña</div></div>
+      <button class="btn btn-ghost" style="padding:2px 8px" onclick="closeModal('modal-password')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nueva contraseña</label>
+        <input class="form-input" type="password" id="new-password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirmar contraseña</label>
+        <input class="form-input" type="password" id="confirm-password" placeholder="Repetí la contraseña">
+      </div>
+      <div id="password-err" style="font-size:12px;color:var(--red);min-height:16px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-password')">Cancelar</button>
+      <button class="btn btn-primary" onclick="cambiarPassword()">Guardar contraseña</button>
+    </div>
+  </div>
+</div>
+
 
 <script>
 // ── SUPABASE ──────────────────────────────────────────────────
@@ -1128,8 +1180,73 @@ async function onLogin(user) {
   renderDashboard();
 }
 
+function abrirCambioPassword() {
+  document.getElementById('new-password').value = '';
+  document.getElementById('confirm-password').value = '';
+  document.getElementById('password-err').textContent = '';
+  document.getElementById('modal-password').classList.add('open');
+}
+
+async function cambiarPassword() {
+  const nueva = document.getElementById('new-password').value;
+  const confirm = document.getElementById('confirm-password').value;
+  const errEl = document.getElementById('password-err');
+  errEl.textContent = '';
+  if(nueva.length < 6) { errEl.textContent = 'La contraseña debe tener al menos 6 caracteres'; return; }
+  if(nueva !== confirm) { errEl.textContent = 'Las contraseñas no coinciden'; return; }
+  const { error } = await sb.auth.updateUser({ password: nueva });
+  if(!error) {
+    closeModal('modal-password');
+    showToast('Contraseña actualizada ✓');
+  } else {
+    errEl.textContent = error.message;
+  }
+}
+
+function abrirCambioPassword() {
+  document.getElementById('new-password').value='';
+  document.getElementById('confirm-password').value='';
+  document.getElementById('password-err').textContent='';
+  document.getElementById('modal-password').classList.add('open');
+}
+
+async function cambiarPassword() {
+  const nueva=document.getElementById('new-password').value;
+  const conf=document.getElementById('confirm-password').value;
+  const errEl=document.getElementById('password-err');
+  errEl.textContent='';
+  if(nueva.length<6){errEl.textContent='Mínimo 6 caracteres';return;}
+  if(nueva!==conf){errEl.textContent='Las contraseñas no coinciden';return;}
+  const {error}=await sb.auth.updateUser({password:nueva});
+  if(!error){closeModal('modal-password');showToast('Contraseña actualizada ✓');}
+  else errEl.textContent=error.message;
+}
+
 function confirmarLogout() {
   if(confirm('¿Seguro que querés cerrar sesión?')) logout();
+}
+
+function abrirCambioPassword() {
+  document.getElementById('new-password').value = '';
+  document.getElementById('confirm-password').value = '';
+  document.getElementById('password-err').textContent = '';
+  document.getElementById('modal-password').classList.add('open');
+}
+
+async function cambiarPassword() {
+  const nueva = document.getElementById('new-password').value;
+  const confirm = document.getElementById('confirm-password').value;
+  const errEl = document.getElementById('password-err');
+  errEl.textContent = '';
+  if(nueva.length < 6) { errEl.textContent = 'La contraseña debe tener al menos 6 caracteres'; return; }
+  if(nueva !== confirm) { errEl.textContent = 'Las contraseñas no coinciden'; return; }
+  const { error } = await sb.auth.updateUser({ password: nueva });
+  if(!error) {
+    closeModal('modal-password');
+    showToast('Contraseña actualizada ✓');
+  } else {
+    errEl.textContent = error.message;
+  }
 }
 
 function confirmarLogout() {
