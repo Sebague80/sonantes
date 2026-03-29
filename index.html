@@ -371,7 +371,7 @@ textarea.form-input{min-height:70px;resize:vertical}
         </div>
         <div class="card" style="padding:0">
           <table><thead><tr>
-            <th style="padding-left:16px">Nombre</th><th>Instrumento</th><th>Nivel</th><th>Nac.</th>
+            <th style="padding-left:16px">Nombre</th><th>Instrumento</th><th>Nac.</th>
             <th>Asistencia</th><th>Progreso</th><th>Estado</th><th>Semáforo</th><th>Código</th><th></th>
           </tr></thead>
           <tbody id="students-tbody"></tbody></table>
@@ -477,33 +477,11 @@ textarea.form-input{min-height:70px;resize:vertical}
           <div style="font-size:13px;color:var(--text2)">Ciclo 2025 · Cuerdas</div>
           <button class="btn btn-primary" onclick="openModal('modal-pieza')">+ Agregar pieza</button>
         </div>
-        <!-- FILTROS -->
-        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-          <div>
-            <span style="font-size:11px;color:var(--text3);margin-right:6px">Instrumento:</span>
-            <span style="display:inline-flex;gap:4px" id="rep-instr-filter">
-              <button class="btn btn-ghost btn-sm rep-fi active" onclick="setRepFilter('instr','Todos',this)">Todos</button>
-              <button class="btn btn-ghost btn-sm rep-fi" onclick="setRepFilter('instr','Violín',this)">Violín</button>
-              <button class="btn btn-ghost btn-sm rep-fi" onclick="setRepFilter('instr','Viola',this)">Viola</button>
-              <button class="btn btn-ghost btn-sm rep-fi" onclick="setRepFilter('instr','Cello',this)">Cello</button>
-              <button class="btn btn-ghost btn-sm rep-fi" onclick="setRepFilter('instr','Contrabajo',this)">Contrabajo</button>
-            </span>
-          </div>
-          <div>
-            <span style="font-size:11px;color:var(--text3);margin-right:6px">Nivel:</span>
-            <span style="display:inline-flex;gap:4px" id="rep-nivel-filter">
-              <button class="btn btn-ghost btn-sm rep-fn active" onclick="setRepFilter('nivel','Todos',this)">Todos</button>
-              <button class="btn btn-ghost btn-sm rep-fn" onclick="setRepFilter('nivel','Iniciación',this)">Iniciación</button>
-              <button class="btn btn-ghost btn-sm rep-fn" onclick="setRepFilter('nivel','Básico',this)">Básico</button>
-              <button class="btn btn-ghost btn-sm rep-fn" onclick="setRepFilter('nivel','Intermedio',this)">Intermedio</button>
-              <button class="btn btn-ghost btn-sm rep-fn" onclick="setRepFilter('nivel','Avanzado',this)">Avanzado</button>
-            </span>
-          </div>
-        </div>
+
         <div class="card" style="padding:0;margin-bottom:18px">
           <table><thead><tr>
             <th style="padding-left:16px">Pieza</th><th>Compositor</th><th>Estado</th>
-            <th>Niveles</th><th>Instrumentos</th><th>Recursos</th><th></th>
+            <th>Recursos</th><th></th>
           </tr></thead>
           <tbody id="pieces-tbody"></tbody></table>
         </div>
@@ -521,16 +499,10 @@ textarea.form-input{min-height:70px;resize:vertical}
       <!-- EVALUACIONES -->
       <div id="view-evaluaciones" class="view">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <div style="font-size:13px;color:var(--text2)">Ciclo 2025 · Primer semestre</div>
-          <button class="btn btn-primary" onclick="openModal('modal-evaluacion')">+ Nueva evaluación</button>
+          <div style="font-size:13px;color:var(--text2)">Devoluciones del ciclo</div>
+          <button class="btn btn-primary" onclick="openModal('modal-devolucion')">+ Nueva devolución</button>
         </div>
-        <div class="card" style="padding:0">
-          <table><thead><tr>
-            <th style="padding-left:16px">Estudiante</th>
-            <th>Arco</th><th>Afinación</th><th>Lectura</th><th>Conjunto</th><th>Promedio</th><th>Observaciones</th>
-          </tr></thead>
-          <tbody id="eval-tbody"></tbody></table>
-        </div>
+        <div id="devoluciones-lista"></div>
       </div>
 
       <!-- CALENDARIO -->
@@ -624,10 +596,7 @@ textarea.form-input{min-height:70px;resize:vertical}
         <div class="alumno-stat-val" id="alu-stat-cam">—</div>
         <div class="alumno-stat-lbl">Asistencia camerata</div>
       </div>
-      <div class="alumno-stat" style="--al:var(--accent)">
-        <div class="alumno-stat-val" id="alu-stat-prom">—</div>
-        <div class="alumno-stat-lbl">Promedio evaluación</div>
-      </div>
+
     </div>
 
     <!-- AVISOS -->
@@ -673,11 +642,10 @@ textarea.form-input{min-height:70px;resize:vertical}
       </div>
     </div>
 
-    <!-- EVALUACIÓN -->
-    <div class="alumno-section" id="alu-eval-section" style="display:none">
-      <div class="alumno-section-title">✎ Mi evaluación</div>
-      <div class="eval-grid" id="alu-eval-grid"></div>
-      <div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text2);line-height:1.5" id="alu-eval-obs"></div>
+    <!-- DEVOLUCIONES -->
+    <div class="alumno-section" id="alu-eval-section">
+      <div class="alumno-section-title">✎ Mis devoluciones</div>
+      <div id="alu-devoluciones-lista"></div>
     </div>
 
     <!-- REPERTORIO -->
@@ -709,11 +677,7 @@ textarea.form-input{min-height:70px;resize:vertical}
             <option>Violín</option><option>Viola</option><option>Cello</option><option>Contrabajo</option>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">Nivel</label>
-          <select class="form-input" id="new-nivel" style="background:var(--surface2)">
-            <option>Iniciación</option><option>Básico</option><option>Intermedio</option><option>Avanzado</option>
-          </select>
-        </div>
+
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input class="form-input" id="new-edad" type="date"></div>
@@ -738,6 +702,8 @@ textarea.form-input{min-height:70px;resize:vertical}
     <!-- TABS -->
     <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);padding:0 22px">
       <div class="tab active" id="dtab-datos" onclick="switchDetalleTab('datos')">Datos</div>
+      <div class="tab" id="dtab-devoluciones" onclick="switchDetalleTab('devoluciones')">Devoluciones</div>
+      <div class="tab" id="dtab-partituras" onclick="switchDetalleTab('partituras')">Partituras</div>
       <div class="tab" id="dtab-seguimiento" onclick="switchDetalleTab('seguimiento')">Seguimiento</div>
       <div class="tab" id="dtab-mensaje" onclick="switchDetalleTab('mensaje')">Mensaje al alumno</div>
     </div>
@@ -792,6 +758,21 @@ textarea.form-input{min-height:70px;resize:vertical}
       </div>
     </div>
 
+    <!-- TAB: DEVOLUCIONES -->
+    <div id="dpanel-devoluciones" class="modal-body" style="display:none">
+      <div id="dpanel-dev-lista" style="max-height:360px;overflow-y:auto"></div>
+    </div>
+
+    <!-- TAB: PARTITURAS -->
+    <div id="dpanel-partituras" class="modal-body" style="display:none">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px">Asigná las partituras que este alumno puede tocar. Las verá en su perfil.</div>
+      <div id="partituras-checks" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto"></div>
+      <div class="modal-footer" style="padding:14px 0 0;border-top:none">
+        <button class="btn btn-primary" onclick="savePartiturasAlumno()">Guardar asignación</button>
+      </div>
+    </div>
+
+    <!-- TAB: PARTITURAS -->
     <!-- TAB: SEGUIMIENTO -->
     <div id="dpanel-seguimiento" class="modal-body" style="display:none">
       <div style="display:flex;gap:10px;margin-bottom:16px">
@@ -836,24 +817,7 @@ textarea.form-input{min-height:70px;resize:vertical}
           </select>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Niveles (vacío = todos)</label>
-        <div class="checkbox-group" id="piece-niveles">
-          <label class="check-pill"><input type="checkbox" value="Iniciación" onchange="togglePill(this)">Iniciación</label>
-          <label class="check-pill"><input type="checkbox" value="Básico" onchange="togglePill(this)">Básico</label>
-          <label class="check-pill"><input type="checkbox" value="Intermedio" onchange="togglePill(this)">Intermedio</label>
-          <label class="check-pill"><input type="checkbox" value="Avanzado" onchange="togglePill(this)">Avanzado</label>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Instrumentos (vacío = todos)</label>
-        <div class="checkbox-group" id="piece-instrumentos">
-          <label class="check-pill"><input type="checkbox" value="Violín" onchange="togglePill(this)">Violín</label>
-          <label class="check-pill"><input type="checkbox" value="Viola" onchange="togglePill(this)">Viola</label>
-          <label class="check-pill"><input type="checkbox" value="Cello" onchange="togglePill(this)">Cello</label>
-          <label class="check-pill"><input type="checkbox" value="Contrabajo" onchange="togglePill(this)">Contrabajo</label>
-        </div>
-      </div>
+
       <div class="form-group">
         <label class="form-label">PDF de la partitura</label>
         <div style="display:flex;gap:8px;align-items:center">
@@ -915,71 +879,42 @@ textarea.form-input{min-height:70px;resize:vertical}
 </div>
 
 <!-- EVALUACIÓN -->
-<div class="modal-overlay" id="modal-evaluacion" onclick="if(event.target===this)closeModal('modal-evaluacion')">
-  <div class="modal">
+<div class="modal-overlay" id="modal-devolucion" onclick="if(event.target===this)closeModal('modal-devolucion')">
+  <div class="modal" style="width:560px">
     <div class="modal-header">
-      <div><div class="modal-title">Nueva evaluación</div><div class="modal-sub">Registrar calificaciones</div></div>
-      <button class="btn btn-ghost" style="padding:2px 8px" onclick="closeModal('modal-evaluacion')">✕</button>
+      <div><div class="modal-title">Nueva devolución</div><div class="modal-sub">Texto libre por período</div></div>
+      <button class="btn btn-ghost" style="padding:2px 8px" onclick="closeModal('modal-devolucion')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Filtrar por instrumento</label>
-        <div style="display:flex;gap:6px;flex-wrap:wrap" id="eval-instr-filter">
-          <button class="btn btn-ghost btn-sm eval-fi active" onclick="setEvalInstrFilter('Todos',this)">Todos</button>
-          <button class="btn btn-ghost btn-sm eval-fi" onclick="setEvalInstrFilter('Violín',this)">Violines</button>
-          <button class="btn btn-ghost btn-sm eval-fi" onclick="setEvalInstrFilter('Viola',this)">Violas</button>
-          <button class="btn btn-ghost btn-sm eval-fi" onclick="setEvalInstrFilter('Cello',this)">Cellos</button>
-          <button class="btn btn-ghost btn-sm eval-fi" onclick="setEvalInstrFilter('Contrabajo',this)">Contrabajos</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="dev-instr-filter">
+          <button class="btn btn-ghost btn-sm dev-fi active" onclick="setDevInstrFilter('Todos',this)">Todos</button>
+          <button class="btn btn-ghost btn-sm dev-fi" onclick="setDevInstrFilter('Violín',this)">Violines</button>
+          <button class="btn btn-ghost btn-sm dev-fi" onclick="setDevInstrFilter('Viola',this)">Violas</button>
+          <button class="btn btn-ghost btn-sm dev-fi" onclick="setDevInstrFilter('Cello',this)">Cellos</button>
+          <button class="btn btn-ghost btn-sm dev-fi" onclick="setDevInstrFilter('Contrabajo',this)">Contrabajos</button>
         </div>
       </div>
       <div class="form-group"><label class="form-label">Estudiante</label>
-        <select class="form-input" id="eval-student" style="background:var(--surface2)"></select>
+        <select class="form-input" id="dev-student" style="background:var(--surface2)"></select>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-            <label class="form-label" style="margin-bottom:0">Técnica arco (1–10)</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer">
-              <input type="checkbox" id="ne-arco" onchange="toggleNE('eval-arco','ne-arco')" style="accent-color:var(--accent)"> No evaluable
-            </label>
-          </div>
-          <input class="form-input" id="eval-arco" type="number" min="1" max="10" placeholder="—">
-        </div>
-        <div class="form-group">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-            <label class="form-label" style="margin-bottom:0">Afinación (1–10)</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer">
-              <input type="checkbox" id="ne-afinacion" onchange="toggleNE('eval-afinacion','ne-afinacion')" style="accent-color:var(--accent)"> No evaluable
-            </label>
-          </div>
-          <input class="form-input" id="eval-afinacion" type="number" min="1" max="10" placeholder="—">
-        </div>
+      <div class="form-group"><label class="form-label">Período</label>
+        <select class="form-input" id="dev-periodo" style="background:var(--surface2)">
+          <option>Mensual</option>
+          <option>Bimestral</option>
+          <option>Trimestral</option>
+          <option>Final del año</option>
+        </select>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-            <label class="form-label" style="margin-bottom:0">Lectura (1–10)</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer">
-              <input type="checkbox" id="ne-lectura" onchange="toggleNE('eval-lectura','ne-lectura')" style="accent-color:var(--accent)"> No evaluable
-            </label>
-          </div>
-          <input class="form-input" id="eval-lectura" type="number" min="1" max="10" placeholder="—">
-        </div>
-        <div class="form-group">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-            <label class="form-label" style="margin-bottom:0">Conjunto (1–10)</label>
-            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer">
-              <input type="checkbox" id="ne-conjunto" onchange="toggleNE('eval-conjunto','ne-conjunto')" style="accent-color:var(--accent)"> No evaluable
-            </label>
-          </div>
-          <input class="form-input" id="eval-conjunto" type="number" min="1" max="10" placeholder="—">
-        </div>
+      <div class="form-group">
+        <label class="form-label">Devolución</label>
+        <textarea class="form-input" id="dev-texto" placeholder="Escribí la devolución del alumno…" style="min-height:120px"></textarea>
       </div>
-      <div class="form-group"><label class="form-label">Observaciones</label><textarea class="form-input" id="eval-obs" placeholder="Fortalezas, áreas a trabajar…"></textarea></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-evaluacion')">Cancelar</button>
-      <button class="btn btn-primary" onclick="addEvaluation()">Guardar evaluación</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-devolucion')">Cancelar</button>
+      <button class="btn btn-primary" onclick="addDevolucion()">Guardar devolución</button>
     </div>
   </div>
 </div>
@@ -1237,12 +1172,12 @@ async function showAlumnoView(alumno) {
     d.setDate(d.getDate()-day+(day===0?-6:1));
     return d.toISOString().split('T')[0];
   })();
-  const [pRes,aRes,attRes,evalRes,clasesRes,msgRes]=await Promise.all([
+  const [pRes,aRes,attRes,clasesRes,msgRes]=await Promise.all([
     sb.from('piezas').select('*').order('created_at'),
     sb.from('avisos').select('*').order('created_at',{ascending:false}),
     sb.from('asistencia').select('*, clases(tipo, docente_ausente, camerata_activa, fecha)')
       .eq('estudiante_id', alumno.id).order('fecha',{ascending:false}),
-    sb.from('evaluaciones').select('*').eq('estudiante_id',alumno.id).order('created_at',{ascending:false}).limit(1),
+
     sb.from('clases').select('*').order('fecha',{ascending:false}),
     sb.from('mensajes_semana').select('*').eq('estudiante_id',alumno.id).eq('semana',semanaActual).maybeSingle()
   ]);
@@ -1253,7 +1188,7 @@ async function showAlumnoView(alumno) {
   const allAvisos=aRes.data||[];
   const todasAsistencias=attRes.data||[];
   console.log('asistencias:', todasAsistencias);
-  const evalData=(evalRes.data||[])[0]||null;
+
 
   const todasClases = clasesRes.data||[];
 
@@ -1283,12 +1218,7 @@ async function showAlumnoView(alumno) {
       ? Math.round(presCam / clasesCam.length * 100) : 0;
   }
 
-  // filtrar piezas
-  const piezasFiltradas=allPiezas.filter(p=>{
-    const matchN=!p.niveles?.length||p.niveles.includes(alumno.nivel);
-    const matchI=!p.instrumentos?.length||p.instrumentos.includes(alumno.instrumento);
-    return matchN&&matchI; // AND: tiene que coincidir en nivel Y en instrumento
-  });
+  // piezas: se cargan desde alumno_piezas en el bloque de evaluacion
 
   // filtrar avisos
   const avisosFiltrados=allAvisos.filter(a=>{
@@ -1377,13 +1307,7 @@ async function showAlumnoView(alumno) {
     camWrap.style.display = 'none';
   }
 
-  // stat evaluacion
-  if(evalData){
-    const prom=((evalData.arco+evalData.afinacion+evalData.lectura+evalData.conjunto)/4).toFixed(1);
-    document.getElementById('alu-stat-prom').textContent=prom;
-  } else {
-    document.getElementById('alu-stat-prom').textContent='—';
-  }
+
 
   // ── ASISTENCIA STRIP ──
   const stripEl=document.getElementById('alu-att-strip');
@@ -1408,20 +1332,27 @@ async function showAlumnoView(alumno) {
     stripEl.innerHTML=`<div style="color:var(--text3);font-size:13px">Sin registros de asistencia aún.</div>`;
   }
 
-  // evaluación
-  if(evalData){
-    document.getElementById('alu-eval-section').style.display='block';
-    const items=[['Técnica arco',evalData.arco],['Afinación',evalData.afinacion],['Lectura',evalData.lectura],['Conjunto',evalData.conjunto]];
-    document.getElementById('alu-eval-grid').innerHTML=items.map(([lbl,v])=>`
-      <div class="eval-item">
-        <div class="eval-item-label">${lbl}</div>
-        ${v===null
-          ? `<div style="margin-top:4px"><span class="badge" style="background:rgba(155,126,200,.15);color:var(--purple);font-size:12px;padding:4px 10px">En proceso</span></div>`
-          : `<div class="eval-item-val" style="color:${scoreColor(v)}">${v}<span style="font-size:14px;color:var(--text3)">/10</span></div>`
-        }
-      </div>`).join('');
-    document.getElementById('alu-eval-obs').textContent=evalData.obs||'Sin observaciones.';
+  // devoluciones del alumno
+  const {data:devData} = await sb.from('devoluciones').select('*')
+    .eq('estudiante_id', alumno.id).order('created_at',{ascending:false});
+  const devLista = document.getElementById('alu-devoluciones-lista');
+  if(devLista){
+    devLista.innerHTML = (devData||[]).length
+      ? (devData||[]).map(d=>`
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span class="badge" style="background:rgba(201,168,76,.15);color:var(--accent)">${d.periodo}</span>
+              <span style="font-size:10px;color:var(--text3)">${new Date(d.created_at).toLocaleDateString('es-UY')}</span>
+            </div>
+            <div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap">${d.texto}</div>
+          </div>`).join('')
+      : '<div style="color:var(--text3);font-size:13px">Sin devoluciones aún.</div>';
   }
+
+  // partituras asignadas al alumno
+  const {data:apData} = await sb.from('alumno_piezas').select('pieza_id').eq('estudiante_id', alumno.id);
+  const piezasIds = new Set((apData||[]).map(x=>x.pieza_id));
+  const piezasFiltradas = allPiezas.filter(p=>piezasIds.has(p.id));
 
   // avisos
   const avisosEl=document.getElementById('alu-avisos');
@@ -1574,6 +1505,7 @@ async function loadAll() {
   pieces=p.data||[];
   evaluations=e.data||[];
   avisos=a.data||[];
+  await loadDevoluciones();
   // calcular dots y porcentajes reales por alumno
   students=(s.data||[]).map(st=>{
     const attInstr=attDataCiclo.filter(x=>x.estudiante_id===st.id&&x.tipo==='instrumento');
@@ -1639,7 +1571,7 @@ function renderStudents(q='') {
     <tr style="cursor:pointer" onclick="openStudentDetail(${s.id})">
       <td style="padding-left:16px"><span class="sname">${av(s)} ${s.nombre} ${s.apellido||''}</span></td>
       <td style="color:var(--text2)">${s.instrumento}</td>
-      <td style="color:var(--text2)">${s.nivel}</td>
+      
       <td>${dots(s.attendance)}</td>
       <td><div style="display:flex;align-items:center;gap:7px"><div class="pbar"><div class="pfill" style="width:${s.pct_instrumento||0}%"></div></div><span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">${s.pct_instrumento||0}%</span></div></td>
       <td>${badgeEl(s)}</td>
@@ -1678,8 +1610,7 @@ function renderPieces() {
       <td style="padding-left:16px;font-weight:500">${p.titulo}</td>
       <td style="color:var(--text2)">${p.compositor||'—'}</td>
       <td><span class="badge" style="background:${stateColor[p.estado]||'var(--text3)'}22;color:${stateColor[p.estado]||'var(--text3)'}">${p.estado}</span></td>
-      <td style="font-size:11px;color:var(--text2)">${(p.niveles||[]).join(', ')||'Todos'}</td>
-      <td style="font-size:11px;color:var(--text2)">${(p.instrumentos||[]).join(', ')||'Todos'}</td>
+      
       <td class="piece-links">
         ${p.pdf_url?`<a class="piece-link" href="${p.pdf_url}" target="_blank">PDF</a>`:''}
         ${p.audio_url?`<a class="piece-link" href="${p.audio_url}" target="_blank">Audio</a>`:''}
@@ -1817,7 +1748,7 @@ function showView(name,el) {
   }
   if(name==='repertorio')renderPieces();
   if(name==='avisos')renderAvisos();
-  if(name==='evaluaciones')renderEvaluations();
+  if(name==='evaluaciones')renderDevoluciones();
   if(name==='calendario'){ renderCalendar(); loadAgenda(); renderCiclo(); }
 }
 
@@ -1842,11 +1773,8 @@ function openModal(id) {
   }
   document.getElementById(id).classList.add('open');
   if(id==='modal-evaluacion') {
-    evalInstrFilter = 'Todos';
-    document.querySelectorAll('.eval-fi').forEach(b => b.classList.remove('active'));
-    const first = document.querySelector('.eval-fi');
-    if(first) first.classList.add('active');
     document.getElementById('eval-student').innerHTML=students.map(s=>`<option value="${s.id}">${s.nombre} ${s.apellido||''} — ${s.instrumento}</option>`).join('');
+    document.getElementById('dev-texto').value='';
   }
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -1932,14 +1860,207 @@ async function saveStudentData() {
 // kept for compatibility
 async function saveNotes() { await saveStudentData(); }
 
+// ── DEVOLUCIONES ─────────────────────────────────────────────
+let devInstrFilter = 'Todos';
+
+function setDevInstrFilter(val, el) {
+  devInstrFilter = val;
+  document.querySelectorAll('.dev-fi').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const filtered = devInstrFilter==='Todos' ? students : students.filter(s=>s.instrumento===devInstrFilter);
+  document.getElementById('dev-student').innerHTML =
+    filtered.map(s=>`<option value="${s.id}">${s.nombre} ${s.apellido||''} — ${s.instrumento}</option>`).join('');
+}
+
+async function loadDevoluciones(estudianteId) {
+  const {data} = await sb.from('devoluciones').select('*')
+    .eq('estudiante_id', estudianteId).order('created_at', {ascending:false});
+  devolucionesData = data||[];
+  renderDevolucionesHistorial();
+}
+
+function renderDevolucionesHistorial() {
+  const el = document.getElementById('dev-historial');
+  if(!el) return;
+  el.innerHTML = devolucionesData.length
+    ? devolucionesData.map(d=>`
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span class="badge" style="background:rgba(201,168,76,.15);color:var(--accent)">${d.periodo}</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:10px;color:var(--text3)">${new Date(d.created_at).toLocaleDateString('es-UY')}</span>
+              <button onclick="deleteDevolucion(${d.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px">✕</button>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap">${d.texto}</div>
+        </div>`).join('')
+    : '<div class="empty">Sin devoluciones aún.</div>';
+}
+
+
+
+
+
+async function deleteDevolucion(id) {
+  const {error} = await sb.from('devoluciones').delete().eq('id',id);
+  if(!error){ await loadDevoluciones(currentDetailId); showToast('Devolución eliminada'); }
+}
+
+async function renderDevoluciones() {
+  const {data} = await sb.from('devoluciones').select('*, estudiantes(nombre,apellido,instrumento)')
+    .order('created_at',{ascending:false});
+  const lista = document.getElementById('devoluciones-lista');
+  if(!lista) return;
+  lista.innerHTML = (data||[]).length ? (data||[]).map(d=>`
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:16px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-weight:500;font-size:13px">${d.estudiantes?.nombre||''} ${d.estudiantes?.apellido||''}</span>
+          <span style="font-size:11px;color:var(--text2)">${d.estudiantes?.instrumento||''}</span>
+          <span class="badge" style="background:rgba(201,168,76,.15);color:var(--accent)">${d.periodo}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:10px;color:var(--text3)">${new Date(d.created_at).toLocaleDateString('es-UY')}</span>
+          <button onclick="deleteDevolucionGlobal(${d.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px">✕</button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap">${d.texto}</div>
+    </div>`).join('')
+    : '<div class="empty">Sin devoluciones registradas aún.</div>';
+}
+
+async function deleteDevolucionGlobal(id) {
+  if(!confirm('¿Eliminar esta devolución?')) return;
+  const {error} = await sb.from('devoluciones').delete().eq('id',id);
+  if(!error){ renderDevoluciones(); showToast('Devolución eliminada'); }
+}
+
+// ── PARTITURAS POR ALUMNO ─────────────────────────────────────
+async function loadPartiturасAlumno(estudianteId) {
+  const {data} = await sb.from('alumno_piezas').select('pieza_id').eq('estudiante_id', estudianteId);
+  const asignadas = new Set((data||[]).map(x=>x.pieza_id));
+  const el = document.getElementById('partituras-checks');
+  if(!el) return;
+  el.innerHTML = pieces.map(p=>`
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;border-radius:7px;background:${asignadas.has(p.id)?'rgba(201,168,76,.08)':'var(--surface2)'};border:1px solid ${asignadas.has(p.id)?'var(--accent)':'var(--border)'}">
+      <input type="checkbox" value="${p.id}" ${asignadas.has(p.id)?'checked':''} style="accent-color:var(--accent)">
+      <div>
+        <div style="font-size:13px;font-weight:500">${p.titulo}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.compositor||''}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:5px">
+        ${p.pdf_url?`<a href="${p.pdf_url}" target="_blank" class="piece-link" onclick="event.stopPropagation()">PDF</a>`:''}
+        ${p.audio_url?`<a href="${p.audio_url}" target="_blank" class="piece-link" onclick="event.stopPropagation()">Audio</a>`:''}
+      </div>
+    </label>`).join('');
+}
+
+async function savePartituras() {
+  const checks = [...document.querySelectorAll('#partituras-checks input[type="checkbox"]')];
+  const seleccionadas = checks.filter(c=>c.checked).map(c=>parseInt(c.value));
+  // borrar asignaciones actuales y reinsertar
+  await sb.from('alumno_piezas').delete().eq('estudiante_id', currentDetailId);
+  if(seleccionadas.length){
+    await sb.from('alumno_piezas').insert(
+      seleccionadas.map(id=>({estudiante_id:currentDetailId, pieza_id:id, docente_id:currentUser.id}))
+    );
+  }
+  closeModal('modal-detalle');
+  showToast('Partituras asignadas ✓');
+}
+
 // ── DETALLE TABS ─────────────────────────────────────────────
 function switchDetalleTab(tab) {
-  ['datos','seguimiento','mensaje'].forEach(t => {
+  ['datos','devoluciones','partituras','seguimiento','mensaje'].forEach(t => {
     document.getElementById('dpanel-'+t).style.display = t===tab ? 'block' : 'none';
     document.getElementById('dtab-'+t).classList.toggle('active', t===tab);
   });
   if (tab==='seguimiento') loadSeguimiento();
+  if (tab==='partituras') loadPartiturasAlumno();
   if (tab==='mensaje') loadMensaje();
+  if (tab==='devoluciones') loadDevoluciones(currentDetailId);
+  if (tab==='partituras') loadPartiturасAlumno(currentDetailId);
+}
+
+async function loadDevolucionesAlumno() {
+  const el = document.getElementById('dpanel-dev-lista');
+  if(!el) return;
+  el.innerHTML = '<div style="color:var(--text3);font-size:12px">Cargando…</div>';
+  const {data} = await sb.from('devoluciones').select('*')
+    .eq('estudiante_id', currentDetailId).order('created_at',{ascending:false});
+  const pc={'Mensual':'var(--blue)','Bimestral':'var(--accent)','Trimestral':'var(--purple)','Final del año':'var(--green)'};
+  el.innerHTML = data?.length ? data.map(d=>`
+    <div style="border-left:3px solid ${pc[d.periodo]||'var(--border)'};padding:10px 14px;margin-bottom:10px;background:var(--surface2);border-radius:0 8px 8px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span class="badge" style="background:${pc[d.periodo]||'var(--border)'}22;color:${pc[d.periodo]||'var(--text3)'}">${d.periodo}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;color:var(--text3)">${new Date(d.created_at).toLocaleDateString('es-UY')}</span>
+          <button onclick="deleteDevolucion(${d.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px">✕</button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap">${d.texto}</div>
+    </div>`).join('')
+    : '<div class="empty">Sin devoluciones para este alumno.</div>';
+}
+
+async function loadPartiturasAlumno() {
+  const el = document.getElementById('partituras-checks');
+  el.innerHTML = '<div style="color:var(--text3);font-size:12px">Cargando…</div>';
+  // cargar asignaciones actuales
+  const { data: asignadas } = await sb.from('alumno_piezas')
+    .select('pieza_id').eq('estudiante_id', currentDetailId);
+  const idsAsignadas = (asignadas||[]).map(x=>x.pieza_id);
+  el.innerHTML = pieces.length ? pieces.map(p=>`
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;background:var(--surface2);border-radius:7px;border:1px solid var(--border)">
+      <input type="checkbox" value="${p.id}" ${idsAsignadas.includes(p.id)?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;flex-shrink:0">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500">${p.titulo}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.compositor||''} ${p.estado?'· '+p.estado:''}</div>
+      </div>
+      ${p.pdf_url?`<a href="${p.pdf_url}" target="_blank" onclick="event.stopPropagation()" class="pieza-btn" style="font-size:10px">PDF</a>`:''}
+    </label>`).join('')
+    : '<div class="empty">Sin partituras en el repositorio aún.</div>';
+}
+
+async function savePartiturasAlumno() {
+  // borrar asignaciones actuales
+  await sb.from('alumno_piezas').delete().eq('estudiante_id', currentDetailId);
+  // insertar las seleccionadas
+  const checks = [...document.querySelectorAll('#partituras-checks input:checked')];
+  if (checks.length) {
+    const rows = checks.map(c=>({ estudiante_id: currentDetailId, pieza_id: parseInt(c.value), docente_id: currentUser.id }));
+    const { error } = await sb.from('alumno_piezas').insert(rows);
+    if (error) { showToast('Error: '+error.message); return; }
+  }
+  showToast('Partituras asignadas ✓');
+}
+
+async function loadPartiturasAlumno() {
+  const el = document.getElementById('partituras-checks');
+  el.innerHTML = '<div style="color:var(--text3);font-size:12px">Cargando…</div>';
+  const { data: asignadas } = await sb.from('alumno_piezas').select('pieza_id').eq('estudiante_id', currentDetailId);
+  const idsAsignadas = (asignadas||[]).map(x=>x.pieza_id);
+  el.innerHTML = pieces.length ? pieces.map(p=>`
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;background:var(--surface2);border-radius:7px;border:1px solid var(--border)">
+      <input type="checkbox" value="${p.id}" ${idsAsignadas.includes(p.id)?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;flex-shrink:0">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500">${p.titulo}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.compositor||''} ${p.estado?'· '+p.estado:''}</div>
+      </div>
+      ${p.pdf_url?`<a href="${p.pdf_url}" target="_blank" onclick="event.stopPropagation()" style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:5px;color:var(--text2);text-decoration:none">PDF</a>`:''}
+    </label>`).join('')
+    : '<div class="empty">Sin partituras en el repositorio aún.</div>';
+}
+
+async function savePartiturasAlumno() {
+  await sb.from('alumno_piezas').delete().eq('estudiante_id', currentDetailId);
+  const checks = [...document.querySelectorAll('#partituras-checks input:checked')];
+  if (checks.length) {
+    const rows = checks.map(c=>({ estudiante_id: currentDetailId, pieza_id: parseInt(c.value), docente_id: currentUser.id }));
+    const { error } = await sb.from('alumno_piezas').insert(rows);
+    if (error) { showToast('Error: '+error.message); return; }
+  }
+  showToast('Partituras asignadas ✓');
 }
 
 async function loadSeguimiento() {
@@ -2384,6 +2505,125 @@ async function addAviso() {
 async function deleteAviso(id) {
   const {error}=await sb.from('avisos').delete().eq('id',id);
   if(!error){avisos=avisos.filter(a=>a.id!==id);renderAvisos();showToast('Aviso eliminado');}
+}
+
+// ── DEVOLUCIONES ─────────────────────────────────────────────
+
+async function loadDevoluciones() {
+  const { data } = await sb.from('devoluciones').select('*, estudiantes(nombre,apellido,instrumento)')
+    .order('created_at', {ascending:false});
+  devoluciones = data||[];
+  renderDevoluciones();
+}
+
+function renderDevoluciones() {
+  const el = document.getElementById('dev-lista');
+  if(!el) return;
+  if(!devoluciones.length){
+    el.innerHTML='<div class="empty">Sin devoluciones aún.</div>';return;
+  }
+  // agrupar por alumno
+  const porAlumno = {};
+  devoluciones.forEach(d=>{
+    const key = d.estudiante_id;
+    if(!porAlumno[key]) porAlumno[key]={alumno:d.estudiantes, items:[]};
+    porAlumno[key].items.push(d);
+  });
+  const periodColor = {'Mensual':'var(--blue)','Bimestral':'var(--accent)','Trimestral':'var(--purple)','Final del año':'var(--green)'};
+  el.innerHTML = Object.values(porAlumno).map(({alumno,items})=>`
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div class="av" style="background:${avatarColor({id:items[0].estudiante_id})};color:#0f0e0c;width:30px;height:30px">${(alumno?.nombre||'?')[0]}${(alumno?.apellido||'?')[0]}</div>
+        <div>
+          <div style="font-weight:500;font-size:14px">${alumno?.nombre||''} ${alumno?.apellido||''}</div>
+          <div style="font-size:11px;color:var(--text3)">${alumno?.instrumento||''}</div>
+        </div>
+      </div>
+      ${items.map(d=>`
+        <div style="border-left:3px solid ${periodColor[d.periodo]||'var(--border)'};padding:10px 14px;margin-bottom:8px;background:var(--surface2);border-radius:0 8px 8px 0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span class="badge" style="background:${periodColor[d.periodo]||'var(--border)'}22;color:${periodColor[d.periodo]||'var(--text3)'}">${d.periodo}</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:10px;color:var(--text3)">${new Date(d.created_at).toLocaleDateString('es-UY')}</span>
+              <button onclick="deleteDevolucion(${d.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px">✕</button>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap">${d.texto}</div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+
+
+async function deleteDevolucion(id) {
+  if(!confirm('¿Eliminar esta devolución?'))return;
+  const {error}=await sb.from('devoluciones').delete().eq('id',id);
+  if(!error){devoluciones=devoluciones.filter(d=>d.id!==id);renderDevoluciones();showToast('Eliminada');}
+}
+
+// ── DEVOLUCIONES ─────────────────────────────────────────────
+let devoluciones=[];
+
+async function loadDevoluciones(){
+  const {data}=await sb.from('devoluciones').select('*, estudiantes(nombre,apellido,instrumento)').order('created_at',{ascending:false});
+  devoluciones=data||[];
+  renderDevoluciones();
+}
+
+function renderDevoluciones(){
+  const el=document.getElementById('dev-lista');
+  if(!el)return;
+  if(!devoluciones.length){el.innerHTML='<div class="empty">Sin devoluciones aún.</div>';return;}
+  const porAlumno={};
+  devoluciones.forEach(d=>{
+    const k=d.estudiante_id;
+    if(!porAlumno[k])porAlumno[k]={alumno:d.estudiantes,items:[]};
+    porAlumno[k].items.push(d);
+  });
+  const pc={'Mensual':'var(--blue)','Bimestral':'var(--accent)','Trimestral':'var(--purple)','Final del año':'var(--green)'};
+  el.innerHTML=Object.values(porAlumno).map(({alumno,items})=>`
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div class="av" style="background:${avatarColor({id:items[0].estudiante_id})};color:#0f0e0c;width:30px;height:30px">${(alumno?.nombre||'?')[0]}${(alumno?.apellido||'?')[0]}</div>
+        <div><div style="font-weight:500;font-size:14px">${alumno?.nombre||''} ${alumno?.apellido||''}</div><div style="font-size:11px;color:var(--text3)">${alumno?.instrumento||''}</div></div>
+      </div>
+      ${items.map(d=>`
+        <div style="border-left:3px solid ${pc[d.periodo]||'var(--border)'};padding:10px 14px;margin-bottom:8px;background:var(--surface2);border-radius:0 8px 8px 0">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span class="badge" style="background:${pc[d.periodo]||'var(--border)'}22;color:${pc[d.periodo]||'var(--text3)'}">${d.periodo}</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:10px;color:var(--text3)">${new Date(d.created_at).toLocaleDateString('es-UY')}</span>
+              <button onclick="deleteDevolucion(${d.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px">✕</button>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap">${d.texto}</div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+
+
+async function deleteDevolucion(id){
+  if(!confirm('¿Eliminar esta devolución?'))return;
+  const {error}=await sb.from('devoluciones').delete().eq('id',id);
+  if(!error){devoluciones=devoluciones.filter(d=>d.id!==id);renderDevoluciones();showToast('Eliminada');}
+}
+
+async function addDevolucion() {
+  const sid = parseInt(document.getElementById('eval-student').value);
+  const periodo = document.getElementById('dev-periodo').value;
+  const texto = document.getElementById('dev-texto').value.trim();
+  if(!texto) { showToast('Escribí la devolución'); return; }
+  const {data, error} = await sb.from('devoluciones').insert({
+    estudiante_id: sid, periodo, texto, docente_id: currentUser.id
+  }).select('*, estudiantes(nombre,apellido,instrumento)').single();
+  if(!error) {
+    devoluciones.unshift(data);
+    document.getElementById('dev-texto').value = '';
+    closeModal('modal-evaluacion');
+    renderDevoluciones();
+    showToast('Devolución guardada ✓');
+  } else showToast('Error: '+error.message);
 }
 
 // ── ADD EVALUATION ────────────────────────────────────────────
