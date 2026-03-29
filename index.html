@@ -2610,9 +2610,14 @@ async function deleteDevolucion(id){
 }
 
 async function addDevolucion() {
-  const sid = parseInt(document.getElementById('eval-student').value);
-  const periodo = document.getElementById('dev-periodo').value;
-  const texto = document.getElementById('dev-texto').value.trim();
+  const studentEl = document.getElementById('eval-student');
+  const periodoEl = document.getElementById('dev-periodo');
+  const textoEl   = document.getElementById('dev-texto');
+  if(!studentEl||!periodoEl||!textoEl){ showToast('Error: formulario no encontrado'); return; }
+  const sid = parseInt(studentEl.value);
+  if(!sid){ showToast('Seleccioná un alumno'); return; }
+  const periodo = periodoEl.value;
+  const texto = textoEl.value.trim();
   if(!texto) { showToast('Escribí la devolución'); return; }
   const {data, error} = await sb.from('devoluciones').insert({
     estudiante_id: sid, periodo, texto, docente_id: currentUser.id
