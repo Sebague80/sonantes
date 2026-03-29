@@ -1972,14 +1972,15 @@ async function savePartituras() {
 // ── DETALLE TABS ─────────────────────────────────────────────
 function switchDetalleTab(tab) {
   ['datos','devoluciones','partituras','seguimiento','mensaje'].forEach(t => {
-    document.getElementById('dpanel-'+t).style.display = t===tab ? 'block' : 'none';
-    document.getElementById('dtab-'+t).classList.toggle('active', t===tab);
+    const panel = document.getElementById('dpanel-'+t);
+    const dtab  = document.getElementById('dtab-'+t);
+    if(panel) panel.style.display = t===tab ? 'block' : 'none';
+    if(dtab)  dtab.classList.toggle('active', t===tab);
   });
-  if (tab==='seguimiento') loadSeguimiento();
-  if (tab==='partituras') loadPartiturasAlumno();
-  if (tab==='mensaje') loadMensaje();
-  if (tab==='devoluciones') loadDevoluciones(currentDetailId);
-  if (tab==='partituras') loadPartiturасAlumno(currentDetailId);
+  if (tab==='devoluciones') loadDevolucionesAlumno();
+  if (tab==='partituras')   loadPartiturasAlumno();
+  if (tab==='seguimiento')  loadSeguimiento();
+  if (tab==='mensaje')      loadMensaje();
 }
 
 async function loadDevolucionesAlumno() {
