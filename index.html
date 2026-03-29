@@ -1772,8 +1772,8 @@ function openModal(id) {
     document.querySelectorAll('#piece-niveles input,#piece-instrumentos input').forEach(c=>{c.checked=false;c.closest('.check-pill').classList.remove('checked');});
   }
   document.getElementById(id).classList.add('open');
-  if(id==='modal-evaluacion') {
-    document.getElementById('eval-student').innerHTML=students.map(s=>`<option value="${s.id}">${s.nombre} ${s.apellido||''} — ${s.instrumento}</option>`).join('');
+  if(id==='modal-devolucion') {
+    document.getElementById('dev-student').innerHTML=students.map(s=>`<option value="${s.id}">${s.nombre} ${s.apellido||''} — ${s.instrumento}</option>`).join('');
     document.getElementById('dev-texto').value='';
   }
 }
@@ -2610,14 +2610,10 @@ async function deleteDevolucion(id){
 }
 
 async function addDevolucion() {
-  const studentEl = document.getElementById('eval-student');
-  const periodoEl = document.getElementById('dev-periodo');
-  const textoEl   = document.getElementById('dev-texto');
-  if(!studentEl||!periodoEl||!textoEl){ showToast('Error: formulario no encontrado'); return; }
-  const sid = parseInt(studentEl.value);
+  const sid = parseInt(document.getElementById('dev-student').value);
   if(!sid){ showToast('Seleccioná un alumno'); return; }
-  const periodo = periodoEl.value;
-  const texto = textoEl.value.trim();
+  const periodo = document.getElementById('dev-periodo').value;
+  const texto = document.getElementById('dev-texto').value.trim();
   if(!texto) { showToast('Escribí la devolución'); return; }
   const {data, error} = await sb.from('devoluciones').insert({
     estudiante_id: sid, periodo, texto, docente_id: currentUser.id
@@ -2625,7 +2621,7 @@ async function addDevolucion() {
   if(!error) {
     devoluciones.unshift(data);
     document.getElementById('dev-texto').value = '';
-    closeModal('modal-evaluacion');
+    closeModal('modal-devolucion');
     renderDevoluciones();
     showToast('Devolución guardada ✓');
   } else showToast('Error: '+error.message);
