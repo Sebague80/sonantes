@@ -1078,11 +1078,7 @@ textarea.form-input{min-height:70px;resize:vertical}
         <div style="margin-bottom:4px"><span style="color:var(--text3)">Código:</span> <span id="envio-codigo" style="font-family:'DM Mono',monospace;color:var(--accent)"></span></div>
         <div><span style="color:var(--text3)">Email tutor:</span> <span id="envio-email"></span></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Contraseña para el alumno *</label>
-        <input class="form-input" type="text" id="envio-password" placeholder="Ej: sonantes2025">
-        <div style="font-size:11px;color:var(--text3);margin-top:4px">Esta contraseña se incluirá en el mail para que el tutor la guarde.</div>
-      </div>
+
       <div class="form-group">
         <label class="form-label">Mensaje adicional (opcional)</label>
         <textarea class="form-input" id="envio-mensaje" placeholder="Ej: La primera clase es el sábado 5 de abril a las 10h." style="min-height:60px"></textarea>
@@ -1312,10 +1308,8 @@ function abrirEnvioAcceso() {
 async function enviarAcceso() {
   const s = students.find(x=>x.id===currentDetailId);
   if(!s) return;
-  const password = document.getElementById('envio-password').value.trim();
   const errEl = document.getElementById('envio-err');
   errEl.textContent = '';
-  if(!password){ errEl.textContent = 'Ingresá la contraseña'; return; }
   const email = document.getElementById('envio-email').textContent;
   const mensajeExtra = document.getElementById('envio-mensaje').value.trim();
   const btn = document.getElementById('btn-enviar-acceso');
@@ -1329,7 +1323,6 @@ async function enviarAcceso() {
       instrumento:   s.instrumento||'',
       url_plataforma:'https://sonantes.netlify.app',
       codigo_acceso: s.codigo_acceso||'',
-      password:      password,
       mensaje_extra: mensajeExtra||'',
     });
     closeModal('modal-envio-acceso');
