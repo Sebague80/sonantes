@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <style>
 :root {
   --bg:#0f0e0c; --surface:#181714; --surface2:#211f1b; --border:#2e2b26;
@@ -21,7 +20,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 /* ── PANTALLA DE ENTRADA ── */
 .entry-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px}
 .entry-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:44px 40px;width:420px;max-width:100%}
-.entry-logo{margin-bottom:8px;display:flex;justify-content:center}
+.entry-logo{font-family:'Playfair Display',serif;font-size:28px;color:var(--accent2);margin-bottom:4px;text-align:center}
 .entry-sub{font-size:11px;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:36px}
 .entry-tabs{display:flex;gap:0;margin-bottom:28px;background:var(--surface2);border-radius:8px;padding:3px}
 .entry-tab{flex:1;text-align:center;padding:8px;border-radius:6px;font-size:13px;cursor:pointer;color:var(--text2);transition:all .15s}
@@ -49,7 +48,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .app{display:flex;height:100vh;overflow:hidden}
 .sidebar{width:228px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
 .logo{padding:22px 20px 16px;border-bottom:1px solid var(--border)}
-.logo-title{}
+.logo-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--accent2)}
 .logo-sub{font-size:10px;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-top:3px}
 .nav{padding:14px 10px;flex:1}
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;cursor:pointer;color:var(--text2);font-size:13px;transition:all .15s;user-select:none}
@@ -175,7 +174,7 @@ textarea.form-input{min-height:70px;resize:vertical}
 ══════════════════════════════════════════════ */
 .alumno-wrap{min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
 .alumno-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
-.alumno-logo{}
+.alumno-logo{font-family:'Playfair Display',serif;font-size:18px;color:var(--accent2)}
 .alumno-user{display:flex;align-items:center;gap:10px}
 .alumno-content{max-width:900px;margin:0 auto;padding:28px 20px;width:100%}
 .alumno-hero{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;display:flex;align-items:center;gap:20px}
@@ -278,7 +277,7 @@ textarea.form-input{min-height:70px;resize:vertical}
 <!-- ══ PANTALLA DE ENTRADA ══════════════════════════════════ -->
 <div id="screen-entry" class="entry-wrap">
   <div class="entry-card">
-    <div class="entry-logo"><img src="https://oiayclvggsqbeiukczfv.supabase.co/storage/v1/object/public/Recursos%20graficos/Grupos%20sonates%20carmelo%20BLANCO.png" style="height:60px;object-fit:contain;display:block"></div>
+    <div class="entry-logo">♩ Sonantes</div>
     <div class="entry-sub" style="text-align:center">Plataforma Sonantes</div>
 
     <div class="entry-tabs">
@@ -312,7 +311,7 @@ textarea.form-input{min-height:70px;resize:vertical}
 <div id="screen-docente" class="app" style="display:none">
   <aside class="sidebar">
     <div class="logo">
-      <div class="logo-title"><img src="https://oiayclvggsqbeiukczfv.supabase.co/storage/v1/object/public/Recursos%20graficos/Grupos%20sonates%20carmelo%20BLANCO.png" style="height:42px;object-fit:contain;display:block"></div>
+      <div class="logo-title">♩ Sonantes</div>
       <div class="logo-sub">Plataforma Docente</div>
     </div>
     <nav class="nav">
@@ -329,7 +328,6 @@ textarea.form-input{min-height:70px;resize:vertical}
         <div class="av-sm" id="footer-av">??</div>
         <div><div class="f-name" id="footer-name">…</div><div class="f-role" id="footer-role">Docente</div></div>
       </div>
-      <button class="logout-btn" onclick="abrirCambioPassword()" style="margin-bottom:6px;border-color:var(--border);color:var(--text2)">Cambiar contraseña</button>
       <button class="logout-btn" onclick="abrirCambioPassword()" style="margin-bottom:6px;color:var(--text2)">Cambiar contraseña</button>
       <button class="logout-btn" onclick="confirmarLogout()">Cerrar sesión</button>
     </div>
@@ -573,7 +571,7 @@ textarea.form-input{min-height:70px;resize:vertical}
 <!-- ══ VISTA ALUMNO ════════════════════════════════════════ -->
 <div id="screen-alumno" class="alumno-wrap" style="display:none">
   <div class="alumno-header">
-    <div class="alumno-logo"><img src="https://oiayclvggsqbeiukczfv.supabase.co/storage/v1/object/public/Recursos%20graficos/Grupos%20sonates%20carmelo%20BLANCO.png" style="height:36px;object-fit:contain;display:block"></div>
+    <div class="alumno-logo">♩ Sonantes</div>
     <div class="alumno-user">
       <span style="font-size:12px;color:var(--text3)" id="alumno-codigo-badge"></span>
       <button class="btn btn-ghost btn-sm" onclick="salirAlumno()">Salir</button>
@@ -1253,6 +1251,12 @@ function abrirEnvioAcceso() {
   document.getElementById('modal-envio-acceso').classList.add('open');
 }
 
+
+
+
+
+
+
 async function enviarAcceso() {
   const s = students.find(x=>x.id===currentDetailId);
   if(!s) return;
@@ -1263,65 +1267,22 @@ async function enviarAcceso() {
   const btn = document.getElementById('btn-enviar-acceso');
   btn.disabled = true; btn.textContent = 'Enviando…';
   try {
-    emailjs.init('5ipJlMq5_y4xTIZjw');
     await emailjs.send('service_nprk7qv', 'template_qri2mnk', {
-      to_email:     email,
-      to_name:      `Familia de ${s.nombre} ${s.apellido||''}`,
-      nombre_alumno: `${s.nombre} ${s.apellido||''}`,
-      instrumento:  s.instrumento||'',
+      to_email:       email,
+      to_name:        `Familia de ${s.nombre} ${s.apellido||''}`,
+      nombre_alumno:  `${s.nombre} ${s.apellido||''}`,
+      instrumento:    s.instrumento||'',
       url_plataforma: 'https://sonantes.netlify.app',
-      codigo_acceso: s.codigo_acceso||'',
-      password:     password,
-      mensaje_extra: mensajeExtra||'',
-    });
+      codigo_acceso:  s.codigo_acceso||'',
+      mensaje_extra:  mensajeExtra||'Sin mensajes adicionales',
+    }, '5ipJlMq5_y4xTIZjw');
     closeModal('modal-envio-acceso');
     showToast(`Mail enviado a ${email} ✓`);
   } catch(e) {
-    errEl.textContent = 'Error al enviar: ' + (e?.text || JSON.stringify(e));
+    console.error('EmailJS error:', e);
+    errEl.textContent = 'Error al enviar: ' + (e?.text || e?.message || JSON.stringify(e));
   }
   btn.disabled = false; btn.textContent = 'Enviar mail';
-}
-
-function abrirEnvioAcceso() {
-  const s = students.find(x=>x.id===currentDetailId);
-  if(!s) return;
-  const emailInput = document.getElementById('d-email-contacto');
-  const email = (emailInput ? emailInput.value.trim() : '') || s.email_contacto || '';
-  if(!email){ showToast('Primero cargá el email del tutor'); return; }
-  document.getElementById('envio-nombre').textContent = `${s.nombre} ${s.apellido||''}`;
-  document.getElementById('envio-codigo').textContent = s.codigo_acceso||'—';
-  document.getElementById('envio-email').textContent = email;
-  document.getElementById('envio-mensaje').value = '';
-  document.getElementById('envio-err').textContent = '';
-  document.getElementById('modal-envio-acceso').classList.add('open');
-}
-
-async function enviarAcceso() {
-  const s = students.find(x=>x.id===currentDetailId);
-  if(!s) return;
-  const errEl = document.getElementById('envio-err');
-  errEl.textContent = '';
-  const email = document.getElementById('envio-email').textContent;
-  const mensajeExtra = document.getElementById('envio-mensaje').value.trim();
-  const btn = document.getElementById('btn-enviar-acceso');
-  btn.disabled=true; btn.textContent='Enviando…';
-  try {
-    emailjs.init('5ipJlMq5_y4xTIZjw');
-    await emailjs.send('service_nprk7qv', 'template_qri2mnk', {
-      to_email:      email,
-      to_name:       `Familia de ${s.nombre} ${s.apellido||''}`,
-      nombre_alumno: `${s.nombre} ${s.apellido||''}`,
-      instrumento:   s.instrumento||'',
-      url_plataforma:'https://sonantes.netlify.app',
-      codigo_acceso: s.codigo_acceso||'',
-      mensaje_extra: mensajeExtra||'',
-    });
-    closeModal('modal-envio-acceso');
-    showToast(`Mail enviado a ${email} ✓`);
-  } catch(e) {
-    errEl.textContent = 'Error: ' + (e?.text||JSON.stringify(e));
-  }
-  btn.disabled=false; btn.textContent='Enviar mail';
 }
 
 function abrirCambioPassword() {
@@ -1347,135 +1308,25 @@ async function cambiarPassword() {
   }
 }
 
-function abrirEnvioAcceso() {
-  const s = students.find(x=>x.id===currentDetailId);
-  if(!s) return;
-  const email = document.getElementById('d-email-contacto').value.trim() || s.email_contacto || '';
-  if(!email){ showToast('Primero cargá el email del tutor'); return; }
-  document.getElementById('envio-nombre').textContent = `${s.nombre} ${s.apellido||''}`;
-  document.getElementById('envio-codigo').textContent = s.codigo_acceso||'—';
-  document.getElementById('envio-email').textContent = email;
-  document.getElementById('envio-mensaje').value = '';
-  document.getElementById('envio-err').textContent = '';
-  document.getElementById('modal-envio-acceso').classList.add('open');
-}
 
-async function enviarAcceso() {
-  const s = students.find(x=>x.id===currentDetailId);
-  if(!s) return;
-  const errEl = document.getElementById('envio-err');
-  errEl.textContent = '';
-  const email = document.getElementById('envio-email').textContent;
-  const mensajeExtra = document.getElementById('envio-mensaje').value.trim();
-  const btn = document.getElementById('btn-enviar-acceso');
-  btn.disabled = true; btn.textContent = 'Enviando…';
-  try {
-    emailjs.init('5ipJlMq5_y4xTIZjw');
-    await emailjs.send('service_nprk7qv', 'template_qri2mnk', {
-      to_email:     email,
-      to_name:      `Familia de ${s.nombre} ${s.apellido||''}`,
-      nombre_alumno: `${s.nombre} ${s.apellido||''}`,
-      instrumento:  s.instrumento||'',
-      url_plataforma: 'https://sonantes.netlify.app',
-      codigo_acceso: s.codigo_acceso||'',
-      password:     password,
-      mensaje_extra: mensajeExtra||'',
-    });
-    closeModal('modal-envio-acceso');
-    showToast(`Mail enviado a ${email} ✓`);
-  } catch(e) {
-    errEl.textContent = 'Error al enviar: ' + (e?.text || JSON.stringify(e));
-  }
-  btn.disabled = false; btn.textContent = 'Enviar mail';
-}
 
-function abrirCambioPassword() {
-  document.getElementById('new-password').value='';
-  document.getElementById('confirm-password').value='';
-  document.getElementById('password-err').textContent='';
-  document.getElementById('modal-password').classList.add('open');
-}
 
-async function cambiarPassword() {
-  const nueva=document.getElementById('new-password').value;
-  const conf=document.getElementById('confirm-password').value;
-  const errEl=document.getElementById('password-err');
-  errEl.textContent='';
-  if(nueva.length<6){errEl.textContent='Mínimo 6 caracteres';return;}
-  if(nueva!==conf){errEl.textContent='Las contraseñas no coinciden';return;}
-  const {error}=await sb.auth.updateUser({password:nueva});
-  if(!error){closeModal('modal-password');showToast('Contraseña actualizada ✓');}
-  else errEl.textContent=error.message;
-}
+
+
+
+async 
 
 function confirmarLogout() {
   if(confirm('¿Seguro que querés cerrar sesión?')) logout();
 }
 
-function abrirEnvioAcceso() {
-  const s = students.find(x=>x.id===currentDetailId);
-  if(!s) return;
-  const email = document.getElementById('d-email-contacto').value.trim() || s.email_contacto || '';
-  if(!email){ showToast('Primero cargá el email del tutor'); return; }
-  document.getElementById('envio-nombre').textContent = `${s.nombre} ${s.apellido||''}`;
-  document.getElementById('envio-codigo').textContent = s.codigo_acceso||'—';
-  document.getElementById('envio-email').textContent = email;
-  document.getElementById('envio-mensaje').value = '';
-  document.getElementById('envio-err').textContent = '';
-  document.getElementById('modal-envio-acceso').classList.add('open');
-}
 
-async function enviarAcceso() {
-  const s = students.find(x=>x.id===currentDetailId);
-  if(!s) return;
-  const errEl = document.getElementById('envio-err');
-  errEl.textContent = '';
-  const email = document.getElementById('envio-email').textContent;
-  const mensajeExtra = document.getElementById('envio-mensaje').value.trim();
-  const btn = document.getElementById('btn-enviar-acceso');
-  btn.disabled = true; btn.textContent = 'Enviando…';
-  try {
-    emailjs.init('5ipJlMq5_y4xTIZjw');
-    await emailjs.send('service_nprk7qv', 'template_qri2mnk', {
-      to_email:     email,
-      to_name:      `Familia de ${s.nombre} ${s.apellido||''}`,
-      nombre_alumno: `${s.nombre} ${s.apellido||''}`,
-      instrumento:  s.instrumento||'',
-      url_plataforma: 'https://sonantes.netlify.app',
-      codigo_acceso: s.codigo_acceso||'',
-      password:     password,
-      mensaje_extra: mensajeExtra||'',
-    });
-    closeModal('modal-envio-acceso');
-    showToast(`Mail enviado a ${email} ✓`);
-  } catch(e) {
-    errEl.textContent = 'Error al enviar: ' + (e?.text || JSON.stringify(e));
-  }
-  btn.disabled = false; btn.textContent = 'Enviar mail';
-}
 
-function abrirCambioPassword() {
-  document.getElementById('new-password').value = '';
-  document.getElementById('confirm-password').value = '';
-  document.getElementById('password-err').textContent = '';
-  document.getElementById('modal-password').classList.add('open');
-}
 
-async function cambiarPassword() {
-  const nueva = document.getElementById('new-password').value;
-  const confirm = document.getElementById('confirm-password').value;
-  const errEl = document.getElementById('password-err');
-  errEl.textContent = '';
-  if(nueva.length < 6) { errEl.textContent = 'La contraseña debe tener al menos 6 caracteres'; return; }
-  if(nueva !== confirm) { errEl.textContent = 'Las contraseñas no coinciden'; return; }
-  const { error } = await sb.auth.updateUser({ password: nueva });
-  if(!error) {
-    closeModal('modal-password');
-    showToast('Contraseña actualizada ✓');
-  } else {
-    errEl.textContent = error.message;
-  }
-}
+
+
+
+async 
 
 function confirmarLogout() {
   if(confirm('¿Seguro que querés cerrar sesión?')) logout();
@@ -3246,6 +3097,7 @@ async function deleteAgenda(id) {
 }
 
 // ── BOOT ──────────────────────────────────────────────────────
+emailjs.init('5ipJlMq5_y4xTIZjw');
 (async()=>{
   const {data:{session}}=await sb.auth.getSession();
   if(session){
