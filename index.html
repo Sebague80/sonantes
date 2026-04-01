@@ -6,6 +6,8 @@
 <title>Sonantes · Plataforma</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <style>
 :root {
   --bg:#0f0e0c; --surface:#181714; --surface2:#211f1b; --border:#2e2b26;
@@ -739,11 +741,16 @@ textarea.form-input{min-height:70px;resize:vertical}
           <option value="Activo">Activo</option><option value="Alerta">Alerta</option><option value="Inactivo">Inactivo</option>
         </select>
       </div>
-      <div style="margin-bottom:10px;padding:8px 10px;background:var(--surface2);border-radius:7px;display:flex;align-items:center;justify-content:space-between">
+      <div class="form-group">
+        <label class="form-label">Email del tutor</label>
+        <input class="form-input" type="email" id="d-email-contacto" placeholder="email@ejemplo.com">
+      </div>
+      <div style="margin-bottom:10px;padding:8px 12px;background:var(--surface2);border-radius:7px;display:flex;align-items:center;justify-content:space-between">
         <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Código de acceso</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Código de acceso del alumno</div>
           <div id="d-codigo" style="font-size:14px;font-family:'DM Mono',monospace;color:var(--accent)"></div>
         </div>
+        <button class="btn btn-ghost btn-sm" onclick="abrirEnvioAcceso()" style="white-space:nowrap">📧 Enviar acceso</button>
       </div>
       <div style="margin-bottom:10px">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2)">
@@ -1058,7 +1065,69 @@ textarea.form-input{min-height:70px;resize:vertical}
   </div>
 </div>
 
+<d<!-- MODAL ENVIO ACCESO -->
+<div class="modal-overlay" id="modal-envio-acceso" onclick="if(event.target===this)closeModal('modal-envio-acceso')">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <div><div class="modal-title">Enviar acceso al alumno</div><div class="modal-sub">Se enviará un mail al tutor con los datos de ingreso</div></div>
+      <button class="btn btn-ghost" style="padding:2px 8px" onclick="closeModal('modal-envio-acceso')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px">
+        <div style="margin-bottom:4px"><span style="color:var(--text3)">Alumno:</span> <span id="envio-nombre"></span></div>
+        <div style="margin-bottom:4px"><span style="color:var(--text3)">Código:</span> <span id="envio-codigo" style="font-family:'DM Mono',monospace;color:var(--accent)"></span></div>
+        <div><span style="color:var(--text3)">Email tutor:</span> <span id="envio-email"></span></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña para el alumno *</label>
+        <input class="form-input" type="text" id="envio-password" placeholder="Ej: sonantes2025">
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Esta contraseña se incluirá en el mail para que el tutor la guarde.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mensaje adicional (opcional)</label>
+        <textarea class="form-input" id="envio-mensaje" placeholder="Ej: La primera clase es el sábado 5 de abril a las 10h." style="min-height:60px"></textarea>
+      </div>
+      <div id="envio-err" style="font-size:12px;color:var(--red);min-height:16px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-envio-acceso')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-enviar-acceso" onclick="enviarAcceso()">Enviar mail</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
+
+<!-- MODAL ENVIO ACCESO -->
+<div class="modal-overlay" id="modal-envio-acceso" onclick="if(event.target===this)closeModal('modal-envio-acceso')">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <div><div class="modal-title">Enviar acceso al alumno</div><div class="modal-sub">Se enviará un mail al tutor con los datos de ingreso</div></div>
+      <button class="btn btn-ghost" style="padding:2px 8px" onclick="closeModal('modal-envio-acceso')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px">
+        <div style="margin-bottom:4px"><span style="color:var(--text3)">Alumno:</span> <span id="envio-nombre"></span></div>
+        <div style="margin-bottom:4px"><span style="color:var(--text3)">Código:</span> <span id="envio-codigo" style="font-family:'DM Mono',monospace;color:var(--accent)"></span></div>
+        <div><span style="color:var(--text3)">Email tutor:</span> <span id="envio-email"></span></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña para el alumno *</label>
+        <input class="form-input" type="text" id="envio-password" placeholder="Ej: sonantes2025">
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Esta contraseña se enviará en el mail y deberá usarla para entrar como docente si corresponde.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mensaje adicional (opcional)</label>
+        <textarea class="form-input" id="envio-mensaje" placeholder="Ej: La primera clase es el sábado 5 de abril a las 10h." style="min-height:60px"></textarea>
+      </div>
+      <div id="envio-err" style="font-size:12px;color:var(--red);min-height:16px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-envio-acceso')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-enviar-acceso" onclick="enviarAcceso()">Enviar mail</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL CAMBIO CONTRASEÑA -->
 <div class="modal-overlay" id="modal-password" onclick="if(event.target===this)closeModal('modal-password')">
@@ -1180,6 +1249,97 @@ async function onLogin(user) {
   renderDashboard();
 }
 
+function abrirEnvioAcceso() {
+  const s = students.find(x=>x.id===currentDetailId);
+  if(!s) return;
+  const email = document.getElementById('d-email-contacto').value.trim() || s.email_contacto || '';
+  if(!email){ showToast('Primero cargá el email del tutor'); return; }
+  document.getElementById('envio-nombre').textContent = `${s.nombre} ${s.apellido||''}`;
+  document.getElementById('envio-codigo').textContent = s.codigo_acceso||'—';
+  document.getElementById('envio-email').textContent = email;
+  document.getElementById('envio-password').value = '';
+  document.getElementById('envio-mensaje').value = '';
+  document.getElementById('envio-err').textContent = '';
+  document.getElementById('modal-envio-acceso').classList.add('open');
+}
+
+async function enviarAcceso() {
+  const s = students.find(x=>x.id===currentDetailId);
+  if(!s) return;
+  const password = document.getElementById('envio-password').value.trim();
+  const errEl = document.getElementById('envio-err');
+  errEl.textContent = '';
+  if(!password){ errEl.textContent = 'Ingresá la contraseña para el alumno'; return; }
+  const email = document.getElementById('envio-email').textContent;
+  const mensajeExtra = document.getElementById('envio-mensaje').value.trim();
+  const btn = document.getElementById('btn-enviar-acceso');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  try {
+    emailjs.init('5ipJlMq5_y4xTIZjw');
+    await emailjs.send('service_nprk7qv', 'template_qri2mnk', {
+      to_email:     email,
+      to_name:      `Familia de ${s.nombre} ${s.apellido||''}`,
+      nombre_alumno: `${s.nombre} ${s.apellido||''}`,
+      instrumento:  s.instrumento||'',
+      url_plataforma: 'https://sonantes.netlify.app',
+      codigo_acceso: s.codigo_acceso||'',
+      password:     password,
+      mensaje_extra: mensajeExtra||'',
+    });
+    closeModal('modal-envio-acceso');
+    showToast(`Mail enviado a ${email} ✓`);
+  } catch(e) {
+    errEl.textContent = 'Error al enviar: ' + (e?.text || JSON.stringify(e));
+  }
+  btn.disabled = false; btn.textContent = 'Enviar mail';
+}
+
+function abrirEnvioAcceso() {
+  const s = students.find(x=>x.id===currentDetailId);
+  if(!s) return;
+  const emailInput = document.getElementById('d-email-contacto');
+  const email = (emailInput ? emailInput.value.trim() : '') || s.email_contacto || '';
+  if(!email){ showToast('Primero cargá el email del tutor'); return; }
+  document.getElementById('envio-nombre').textContent = `${s.nombre} ${s.apellido||''}`;
+  document.getElementById('envio-codigo').textContent = s.codigo_acceso||'—';
+  document.getElementById('envio-email').textContent = email;
+  document.getElementById('envio-password').value = '';
+  document.getElementById('envio-mensaje').value = '';
+  document.getElementById('envio-err').textContent = '';
+  document.getElementById('modal-envio-acceso').classList.add('open');
+}
+
+async function enviarAcceso() {
+  const s = students.find(x=>x.id===currentDetailId);
+  if(!s) return;
+  const password = document.getElementById('envio-password').value.trim();
+  const errEl = document.getElementById('envio-err');
+  errEl.textContent = '';
+  if(!password){ errEl.textContent = 'Ingresá la contraseña'; return; }
+  const email = document.getElementById('envio-email').textContent;
+  const mensajeExtra = document.getElementById('envio-mensaje').value.trim();
+  const btn = document.getElementById('btn-enviar-acceso');
+  btn.disabled=true; btn.textContent='Enviando…';
+  try {
+    emailjs.init('5ipJlMq5_y4xTIZjw');
+    await emailjs.send('service_nprk7qv', 'template_qri2mnk', {
+      to_email:      email,
+      to_name:       `Familia de ${s.nombre} ${s.apellido||''}`,
+      nombre_alumno: `${s.nombre} ${s.apellido||''}`,
+      instrumento:   s.instrumento||'',
+      url_plataforma:'https://sonantes.netlify.app',
+      codigo_acceso: s.codigo_acceso||'',
+      password:      password,
+      mensaje_extra: mensajeExtra||'',
+    });
+    closeModal('modal-envio-acceso');
+    showToast(`Mail enviado a ${email} ✓`);
+  } catch(e) {
+    errEl.textContent = 'Error: ' + (e?.text||JSON.stringify(e));
+  }
+  btn.disabled=false; btn.textContent='Enviar mail';
+}
+
 function abrirCambioPassword() {
   document.getElementById('new-password').value = '';
   document.getElementById('confirm-password').value = '';
@@ -1203,6 +1363,51 @@ async function cambiarPassword() {
   }
 }
 
+function abrirEnvioAcceso() {
+  const s = students.find(x=>x.id===currentDetailId);
+  if(!s) return;
+  const email = document.getElementById('d-email-contacto').value.trim() || s.email_contacto || '';
+  if(!email){ showToast('Primero cargá el email del tutor'); return; }
+  document.getElementById('envio-nombre').textContent = `${s.nombre} ${s.apellido||''}`;
+  document.getElementById('envio-codigo').textContent = s.codigo_acceso||'—';
+  document.getElementById('envio-email').textContent = email;
+  document.getElementById('envio-password').value = '';
+  document.getElementById('envio-mensaje').value = '';
+  document.getElementById('envio-err').textContent = '';
+  document.getElementById('modal-envio-acceso').classList.add('open');
+}
+
+async function enviarAcceso() {
+  const s = students.find(x=>x.id===currentDetailId);
+  if(!s) return;
+  const password = document.getElementById('envio-password').value.trim();
+  const errEl = document.getElementById('envio-err');
+  errEl.textContent = '';
+  if(!password){ errEl.textContent = 'Ingresá la contraseña para el alumno'; return; }
+  const email = document.getElementById('envio-email').textContent;
+  const mensajeExtra = document.getElementById('envio-mensaje').value.trim();
+  const btn = document.getElementById('btn-enviar-acceso');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  try {
+    emailjs.init('5ipJlMq5_y4xTIZjw');
+    await emailjs.send('service_nprk7qv', 'template_qri2mnk', {
+      to_email:     email,
+      to_name:      `Familia de ${s.nombre} ${s.apellido||''}`,
+      nombre_alumno: `${s.nombre} ${s.apellido||''}`,
+      instrumento:  s.instrumento||'',
+      url_plataforma: 'https://sonantes.netlify.app',
+      codigo_acceso: s.codigo_acceso||'',
+      password:     password,
+      mensaje_extra: mensajeExtra||'',
+    });
+    closeModal('modal-envio-acceso');
+    showToast(`Mail enviado a ${email} ✓`);
+  } catch(e) {
+    errEl.textContent = 'Error al enviar: ' + (e?.text || JSON.stringify(e));
+  }
+  btn.disabled = false; btn.textContent = 'Enviar mail';
+}
+
 function abrirCambioPassword() {
   document.getElementById('new-password').value='';
   document.getElementById('confirm-password').value='';
@@ -1224,6 +1429,51 @@ async function cambiarPassword() {
 
 function confirmarLogout() {
   if(confirm('¿Seguro que querés cerrar sesión?')) logout();
+}
+
+function abrirEnvioAcceso() {
+  const s = students.find(x=>x.id===currentDetailId);
+  if(!s) return;
+  const email = document.getElementById('d-email-contacto').value.trim() || s.email_contacto || '';
+  if(!email){ showToast('Primero cargá el email del tutor'); return; }
+  document.getElementById('envio-nombre').textContent = `${s.nombre} ${s.apellido||''}`;
+  document.getElementById('envio-codigo').textContent = s.codigo_acceso||'—';
+  document.getElementById('envio-email').textContent = email;
+  document.getElementById('envio-password').value = '';
+  document.getElementById('envio-mensaje').value = '';
+  document.getElementById('envio-err').textContent = '';
+  document.getElementById('modal-envio-acceso').classList.add('open');
+}
+
+async function enviarAcceso() {
+  const s = students.find(x=>x.id===currentDetailId);
+  if(!s) return;
+  const password = document.getElementById('envio-password').value.trim();
+  const errEl = document.getElementById('envio-err');
+  errEl.textContent = '';
+  if(!password){ errEl.textContent = 'Ingresá la contraseña para el alumno'; return; }
+  const email = document.getElementById('envio-email').textContent;
+  const mensajeExtra = document.getElementById('envio-mensaje').value.trim();
+  const btn = document.getElementById('btn-enviar-acceso');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  try {
+    emailjs.init('5ipJlMq5_y4xTIZjw');
+    await emailjs.send('service_nprk7qv', 'template_qri2mnk', {
+      to_email:     email,
+      to_name:      `Familia de ${s.nombre} ${s.apellido||''}`,
+      nombre_alumno: `${s.nombre} ${s.apellido||''}`,
+      instrumento:  s.instrumento||'',
+      url_plataforma: 'https://sonantes.netlify.app',
+      codigo_acceso: s.codigo_acceso||'',
+      password:     password,
+      mensaje_extra: mensajeExtra||'',
+    });
+    closeModal('modal-envio-acceso');
+    showToast(`Mail enviado a ${email} ✓`);
+  } catch(e) {
+    errEl.textContent = 'Error al enviar: ' + (e?.text || JSON.stringify(e));
+  }
+  btn.disabled = false; btn.textContent = 'Enviar mail';
 }
 
 function abrirCambioPassword() {
@@ -1912,6 +2162,8 @@ function openStudentDetail(id) {
   document.getElementById('d-contacto').value=s.contacto||'';
   document.getElementById('d-status').value=s.status||'Activo';
   document.getElementById('d-codigo').textContent=s.codigo_acceso||'Sin código';
+  document.getElementById('d-email-contacto').value=s.email_contacto||'';
+  document.getElementById('d-email-contacto').value=s.email_contacto||'';
   document.getElementById('d-notas').value=s.notas||'';
   // reset tabs
   switchDetalleTab('datos');
@@ -1961,6 +2213,8 @@ async function saveStudentData() {
     nivel:            document.getElementById('d-nivel').value||null,
     fecha_nacimiento: document.getElementById('d-edad').value||null,
     contacto:         document.getElementById('d-contacto').value.trim(),
+    email_contacto:   document.getElementById('d-email-contacto').value.trim()||null,
+    email_contacto:   document.getElementById('d-email-contacto').value.trim()||null,
     status:           document.getElementById('d-status').value,
     notas:            document.getElementById('d-notas').value,
   };
