@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0f0e0c">
 <title>Sonantes · Plataforma</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -322,6 +327,7 @@ textarea.form-input{min-height:70px;resize:vertical}
       <div class="nav-item" onclick="showView('avisos',this)">📢 &nbsp;Avisos</div>
       <div class="nav-item" onclick="showView('evaluaciones',this)">✎ &nbsp;Evaluaciones</div>
       <div class="nav-item" onclick="showView('calendario',this)">▤ &nbsp;Calendario</div>
+      <div class="nav-item nav-item-admin" onclick="showView('preinscripciones',this)" style="display:none">✎ &nbsp;Pre-inscripciones</div>
     </nav>
     <div class="sidebar-footer">
       <div class="footer-row">
@@ -560,6 +566,97 @@ textarea.form-input{min-height:70px;resize:vertical}
           <div class="card">
             <div class="card-title">Clases del mes</div>
             <div id="cal-clases-lista"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRE-INSCRIPCIONES -->
+      <div id="view-preinscripciones" class="view">
+        <div style="display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:20px">
+          <div class="tab active" id="pitab-lista"  onclick="switchPiTab('lista')">Pre-inscripciones</div>
+          <div class="tab"        id="pitab-config" onclick="switchPiTab('config')">Configuración del ciclo</div>
+        </div>
+        <!-- PANEL LISTA -->
+        <div id="pipanel-lista">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+            <div class="tabs" style="margin-bottom:0;border:none">
+              <div class="tab active" onclick="setPiFilter('todos',this)">Todos</div>
+              <div class="tab" onclick="setPiFilter('pendiente',this)">Pendientes</div>
+              <div class="tab" onclick="setPiFilter('confirmada',this)">Confirmadas</div>
+              <div class="tab" onclick="setPiFilter('rechazada',this)">Rechazadas</div>
+            </div>
+            <select id="pi-filtro-instr" class="form-input" style="width:160px;padding:6px 10px;font-size:12px" onchange="renderPreinscripciones()">
+              <option value="">Todos los instrumentos</option>
+              <option>Violín</option><option>Viola</option><option>Cello</option>
+              <option>Contrabajo</option><option>Sin definir</option>
+            </select>
+            <div style="margin-left:auto;font-size:12px;color:var(--text3)" id="pi-count"></div>
+          </div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <table style="width:100%">
+              <thead>
+                <tr>
+                  <th>Alumno</th><th>Instrumento</th><th>Localidad</th>
+                  <th>Contacto</th><th>Fecha</th><th>Estado</th><th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="pi-tbody"><tr><td colspan="7" class="empty">Cargando…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- PANEL CONFIG -->
+        <div id="pipanel-config" style="display:none">
+          <div class="grid2">
+            <div class="card">
+              <div class="card-title">Período de inscripción</div>
+              <div class="form-group">
+                <label class="form-label">Estado</label>
+                <select class="form-input" id="cfg-activo" style="background:var(--surface2)">
+                  <option value="true">Abierto</option>
+                  <option value="false">Cerrado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nombre del ciclo</label>
+                <input class="form-input" id="cfg-nombre" placeholder="Ej: Ciclo 2026">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Fecha de apertura</label>
+                  <input class="form-input" type="date" id="cfg-inicio">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fecha de cierre</label>
+                  <input class="form-input" type="date" id="cfg-cierre">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Mensaje cuando está abierto</label>
+                <input class="form-input" id="cfg-msg-abierto" placeholder="Ej: Inscripciones abiertas hasta el 30 de mayo">
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Mensaje cuando está cerrado</label>
+                <input class="form-input" id="cfg-msg-cerrado" placeholder="Ej: Las inscripciones para 2026 abrirán en marzo">
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Especificaciones del ciclo</div>
+              <div class="form-group">
+                <label class="form-label">Cuota mensual</label>
+                <input class="form-input" id="cfg-cuota" placeholder="Ej: $1.200 / USD 30">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Edad mínima</label>
+                <input class="form-input" type="number" id="cfg-edad-min" placeholder="Ej: 6" min="3" max="99">
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Información adicional</label>
+                <textarea class="form-input" id="cfg-specs" placeholder="Ej: Las clases son los sábados de 9 a 12h." style="min-height:90px"></textarea>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:16px">
+            <button class="btn btn-primary" onclick="saveCicloConfig()">Guardar configuración</button>
           </div>
         </div>
       </div>
@@ -1090,6 +1187,101 @@ textarea.form-input{min-height:70px;resize:vertical}
   </div>
 </div>
 
+<!-- MODAL DETALLE PRE-INSCRIPCIÓN -->
+<div class="modal-overlay" id="modal-pi-detalle" onclick="if(event.target===this)closeModal('modal-pi-detalle')">
+  <div class="modal" style="width:560px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="pi-det-nombre"></div>
+        <div class="modal-sub"   id="pi-det-sub"></div>
+      </div>
+      <button class="btn btn-ghost" style="padding:2px 8px" onclick="closeModal('modal-pi-detalle')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--surface2);border-radius:8px;padding:14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+        <div><span style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.1em">Instrumento</span><br><span id="pi-det-instr"></span></div>
+        <div><span style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.1em">Localidad</span><br><span id="pi-det-localidad"></span></div>
+        <div><span style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.1em">Nacimiento</span><br><span id="pi-det-nac"></span></div>
+        <div><span style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.1em">Fecha inscripción</span><br><span id="pi-det-fecha"></span></div>
+        <div><span style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.1em">Contacto</span><br><span id="pi-det-contacto"></span></div>
+        <div><span style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.1em">Teléfono</span><br><span id="pi-det-tel"></span></div>
+        <div style="grid-column:span 2"><span style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.1em">Email</span><br><span id="pi-det-email"></span></div>
+      </div>
+      <div id="pi-det-exp-wrap" style="margin-bottom:16px;display:none">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px">Experiencia previa</div>
+        <div id="pi-det-exp" style="font-size:13px;color:var(--text2);line-height:1.5"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Notas internas</label>
+        <textarea class="form-input" id="pi-det-notas" placeholder="Observaciones del equipo docente…" style="min-height:60px"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" style="color:var(--red)" onclick="cambiarEstadoPi('rechazada')">Rechazar</button>
+      <button class="btn btn-ghost" onclick="cambiarEstadoPi('confirmada')">Confirmar</button>
+      <button class="btn btn-primary" onclick="abrirConvertirAlumno()">Convertir en alumno →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONVERTIR EN ALUMNO -->
+<div class="modal-overlay" id="modal-pi-convertir" onclick="if(event.target===this)closeModal('modal-pi-convertir')">
+  <div class="modal" style="width:520px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Convertir en alumno</div>
+        <div class="modal-sub">Revisá los datos antes de crear el registro</div>
+      </div>
+      <button class="btn btn-ghost" style="padding:2px 8px" onclick="closeModal('modal-pi-convertir')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5">
+        Se creará un nuevo estudiante con estos datos. El código SON-XXXX se genera automáticamente.
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre *</label>
+          <input class="form-input" id="conv-nombre" placeholder="Nombre">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apellido</label>
+          <input class="form-input" id="conv-apellido" placeholder="Apellido">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Instrumento</label>
+          <select class="form-input" id="conv-instrumento" style="background:var(--surface2)">
+            <option>Violín</option><option>Viola</option><option>Cello</option><option>Contrabajo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de nacimiento</label>
+          <input class="form-input" type="date" id="conv-nacimiento">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Contacto familiar</label>
+          <input class="form-input" id="conv-contacto" placeholder="Nombre del tutor">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input class="form-input" id="conv-telefono" placeholder="099 000 000">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Email del tutor</label>
+        <input class="form-input" type="email" id="conv-email" placeholder="correo@ejemplo.com">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-pi-convertir')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-convertir" onclick="confirmarConversion()">Crear alumno</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- MODAL ENVIO ACCESO -->
@@ -1236,6 +1428,7 @@ async function onLogin(user) {
   initAgenda();
   renderCiclo();
   renderDashboard();
+  initPreinscripcionesNav();
 }
 
 function abrirEnvioAcceso() {
@@ -1907,7 +2100,7 @@ function cambiarMes(delta) {
   renderCalendar();
 }
 
-const viewTitles={dashboard:'Resumen General',estudiantes:'Estudiantes',asistencia:'Registro de Asistencia',repertorio:'Repertorio',avisos:'Avisos para alumnos',evaluaciones:'Evaluaciones',calendario:'Calendario'};
+const viewTitles={dashboard:'Resumen General',estudiantes:'Estudiantes',asistencia:'Registro de Asistencia',repertorio:'Repertorio',avisos:'Avisos para alumnos',evaluaciones:'Evaluaciones',calendario:'Calendario',preinscripciones:'Pre-inscripciones'};
 
 function showView(name,el) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -1926,6 +2119,7 @@ function showView(name,el) {
   if(name==='avisos')renderAvisos();
   if(name==='evaluaciones')renderDevoluciones();
   if(name==='calendario'){ renderCalendar(); loadAgenda(); renderCiclo(); }
+  if(name==='preinscripciones') loadPreinscripciones();
 }
 
 function setInstrTab(val,el) {
@@ -3094,6 +3288,184 @@ emailjs.init('5ipJlMq5_y4xTIZjw');
     }
   }
 })();
+
+// ── PRE-INSCRIPCIONES ─────────────────────────────────────────
+var preinscripciones = [];
+var piFilterEstado   = 'todos';
+var piDetalle        = null;
+var cicloConfigAdmin = null;
+
+function initPreinscripcionesNav() {
+  if(currentDocente && currentDocente.rol === 'admin') {
+    document.querySelectorAll('.nav-item-admin').forEach(el => el.style.display='flex');
+  }
+}
+
+function switchPiTab(tab) {
+  document.getElementById('pipanel-lista').style.display  = tab==='lista'  ? 'block' : 'none';
+  document.getElementById('pipanel-config').style.display = tab==='config' ? 'block' : 'none';
+  document.getElementById('pitab-lista').classList.toggle('active',  tab==='lista');
+  document.getElementById('pitab-config').classList.toggle('active', tab==='config');
+  if(tab==='config') loadCicloConfigAdmin();
+}
+
+function setPiFilter(val, el) {
+  piFilterEstado = val;
+  el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderPreinscripciones();
+}
+
+async function loadPreinscripciones() {
+  const res = await sb.from('preinscripciones').select('*').order('created_at',{ascending:false});
+  preinscripciones = res.data || [];
+  renderPreinscripciones();
+}
+
+function renderPreinscripciones() {
+  const instrFiltro = document.getElementById('pi-filtro-instr').value;
+  const lista = preinscripciones.filter(p => {
+    const okEstado = piFilterEstado==='todos' || p.estado===piFilterEstado;
+    const okInstr  = !instrFiltro || p.instrumento===instrFiltro;
+    return okEstado && okInstr;
+  });
+  document.getElementById('pi-count').textContent = lista.length + ' registro' + (lista.length!==1?'s':'');
+  const estadoColor = {pendiente:'var(--accent)',confirmada:'var(--green)',rechazada:'var(--red)'};
+  const estadoLabel = {pendiente:'Pendiente',confirmada:'Confirmada',rechazada:'Rechazada'};
+  const html = lista.length ? lista.map(p => {
+    const fecha = p.created_at ? p.created_at.split('T')[0] : '—';
+    const color = estadoColor[p.estado]||'var(--text3)';
+    const label = estadoLabel[p.estado]||p.estado;
+    return `<tr style="cursor:pointer" onclick="abrirPiDetalle(${p.id})">
+      <td><strong>${p.nombre} ${p.apellido||''}</strong></td>
+      <td>${p.instrumento||'—'}</td>
+      <td style="color:var(--text2)">${p.localidad||'—'}</td>
+      <td style="color:var(--text2)">${p.contacto||'—'}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${fecha}</td>
+      <td><span style="font-size:11px;padding:2px 8px;border-radius:5px;background:${color}22;color:${color}">${label}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();abrirPiDetalle(${p.id})">Ver</button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" class="empty">Sin resultados para este filtro</td></tr>';
+  document.getElementById('pi-tbody').innerHTML = html;
+}
+
+function abrirPiDetalle(id) {
+  const p = preinscripciones.find(x=>x.id===id);
+  if(!p) return;
+  piDetalle = p;
+  document.getElementById('pi-det-nombre').textContent   = `${p.nombre} ${p.apellido||''}`;
+  document.getElementById('pi-det-sub').textContent      = `${p.instrumento||''}${p.localidad?' · '+p.localidad:''}`;
+  document.getElementById('pi-det-instr').textContent    = p.instrumento||'—';
+  document.getElementById('pi-det-localidad').textContent= p.localidad||'—';
+  document.getElementById('pi-det-nac').textContent      = p.fecha_nacimiento ? formatFechaPi(p.fecha_nacimiento) : '—';
+  document.getElementById('pi-det-fecha').textContent    = p.created_at ? p.created_at.split('T')[0] : '—';
+  document.getElementById('pi-det-contacto').textContent = p.contacto||'—';
+  document.getElementById('pi-det-tel').textContent      = p.telefono||'—';
+  document.getElementById('pi-det-email').textContent    = p.email_contacto||'—';
+  document.getElementById('pi-det-notas').value          = p.notas_admin||'';
+  const expWrap = document.getElementById('pi-det-exp-wrap');
+  if(p.experiencia){ document.getElementById('pi-det-exp').textContent=p.experiencia; expWrap.style.display='block'; }
+  else { expWrap.style.display='none'; }
+  openModal('modal-pi-detalle');
+}
+
+async function cambiarEstadoPi(nuevoEstado) {
+  if(!piDetalle) return;
+  const notas = document.getElementById('pi-det-notas').value.trim();
+  const res = await sb.from('preinscripciones')
+    .update({estado:nuevoEstado, notas_admin:notas||null})
+    .eq('id',piDetalle.id);
+  if(res.error){ showToast('Error: '+res.error.message); return; }
+  closeModal('modal-pi-detalle');
+  showToast('Estado actualizado ✓');
+  await loadPreinscripciones();
+}
+
+function abrirConvertirAlumno() {
+  if(!piDetalle) return;
+  const p = piDetalle;
+  document.getElementById('conv-nombre').value     = p.nombre||'';
+  document.getElementById('conv-apellido').value   = p.apellido||'';
+  document.getElementById('conv-nacimiento').value = p.fecha_nacimiento||'';
+  document.getElementById('conv-contacto').value   = p.contacto||'';
+  document.getElementById('conv-telefono').value   = p.telefono||'';
+  document.getElementById('conv-email').value      = p.email_contacto||'';
+  const sel = document.getElementById('conv-instrumento');
+  const opts = ['Violín','Viola','Cello','Contrabajo'];
+  sel.value = opts.includes(p.instrumento) ? p.instrumento : 'Violín';
+  closeModal('modal-pi-detalle');
+  openModal('modal-pi-convertir');
+}
+
+async function confirmarConversion() {
+  const nombre = document.getElementById('conv-nombre').value.trim();
+  if(!nombre){ showToast('El nombre es obligatorio'); return; }
+  const btn = document.getElementById('btn-convertir');
+  btn.disabled=true; btn.textContent='…';
+  const payload = {
+    nombre,
+    apellido:         document.getElementById('conv-apellido').value.trim()||null,
+    instrumento:      document.getElementById('conv-instrumento').value,
+    fecha_nacimiento: document.getElementById('conv-nacimiento').value||null,
+    contacto:         document.getElementById('conv-contacto').value.trim()||null,
+    email_contacto:   document.getElementById('conv-email').value.trim()||null,
+    status:           'Activo',
+    docente_id:       currentUser.id
+  };
+  const res = await sb.from('estudiantes').insert(payload);
+  btn.disabled=false; btn.textContent='Crear alumno';
+  if(res.error){ showToast('Error: '+res.error.message); return; }
+  if(piDetalle) await sb.from('preinscripciones').update({estado:'confirmada'}).eq('id',piDetalle.id);
+  closeModal('modal-pi-convertir');
+  showToast('Alumno creado ✓ — recordá enviarle el código de acceso');
+  await loadPreinscripciones();
+  await loadAll();
+}
+
+async function loadCicloConfigAdmin() {
+  const res = await sb.from('config_preinscripcion').select('*').order('id',{ascending:false}).limit(1).maybeSingle();
+  cicloConfigAdmin = res.data||null;
+  renderCicloConfigForm(cicloConfigAdmin);
+}
+
+function renderCicloConfigForm(cfg) {
+  document.getElementById('cfg-activo').value      = cfg ? String(cfg.activo) : 'true';
+  document.getElementById('cfg-nombre').value      = cfg?.nombre_ciclo    || '';
+  document.getElementById('cfg-inicio').value      = cfg?.fecha_inicio    || '';
+  document.getElementById('cfg-cierre').value      = cfg?.fecha_cierre    || '';
+  document.getElementById('cfg-msg-abierto').value = cfg?.mensaje_abierto || '';
+  document.getElementById('cfg-msg-cerrado').value = cfg?.mensaje_cerrado || '';
+  document.getElementById('cfg-cuota').value       = cfg?.cuota           || '';
+  document.getElementById('cfg-edad-min').value    = cfg?.edad_minima     || '';
+  document.getElementById('cfg-specs').value       = cfg?.specs           || '';
+}
+
+async function saveCicloConfig() {
+  const payload = {
+    activo:          document.getElementById('cfg-activo').value==='true',
+    nombre_ciclo:    document.getElementById('cfg-nombre').value.trim()||null,
+    fecha_inicio:    document.getElementById('cfg-inicio').value||null,
+    fecha_cierre:    document.getElementById('cfg-cierre').value||null,
+    mensaje_abierto: document.getElementById('cfg-msg-abierto').value.trim()||null,
+    mensaje_cerrado: document.getElementById('cfg-msg-cerrado').value.trim()||null,
+    cuota:           document.getElementById('cfg-cuota').value.trim()||null,
+    edad_minima:     parseInt(document.getElementById('cfg-edad-min').value)||null,
+    specs:           document.getElementById('cfg-specs').value.trim()||null
+  };
+  const res = cicloConfigAdmin
+    ? await sb.from('config_preinscripcion').update(payload).eq('id',cicloConfigAdmin.id)
+    : await sb.from('config_preinscripcion').insert(payload);
+  if(res.error){ showToast('Error: '+res.error.message); return; }
+  showToast('Configuración guardada ✓');
+  await loadCicloConfigAdmin();
+}
+
+function formatFechaPi(iso) {
+  if(!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return `${parseInt(d)} ${meses[parseInt(m)-1]} ${y}`;
+}
 </script>
 </body>
 </html>
