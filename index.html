@@ -141,7 +141,7 @@ textarea.form-input{min-height:70px;resize:vertical}
 
 /* FILTROS INSTRUMENTO */
 .att-fi.active, .eval-fi.active {background:rgba(201,168,76,.15);border-color:var(--accent);color:var(--accent2);}
-.docente-ausente-aviso{background:rgba(192,96,74,.1);border:1px solid rgba(192,96,74,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:14px;}
+
 
 /* REP FILTERS */
 .rep-fi.active,.rep-fn.active{background:rgba(201,168,76,.15);border-color:var(--accent);color:var(--accent2);}
@@ -407,10 +407,6 @@ textarea.form-input{min-height:70px;resize:vertical}
             </div>
           </div>
           <div style="display:flex;gap:20px;margin-bottom:18px;flex-wrap:wrap">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2)">
-              <input type="checkbox" id="clase-docente-ausente" style="accent-color:var(--red)">
-              Docente ausente <span style="font-size:11px;color:var(--text3)">(no cuenta para % instrumento)</span>
-            </label>
             <label id="wrap-camerata-activa" style="display:none;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2)">
               <input type="checkbox" id="clase-camerata-activa" checked style="accent-color:var(--accent)">
               Camerata activa <span style="font-size:11px;color:var(--text3)">(cuenta para % camerata)</span>
@@ -437,7 +433,7 @@ textarea.form-input{min-height:70px;resize:vertical}
                 <strong id="att-date" style="color:var(--text)"></strong>
                 &nbsp;<span id="att-tipo-badge" class="badge"></span>
               </div>
-              <div style="font-size:11px;color:var(--text3);margin-top:3px" id="att-docente-aviso">Marcá la asistencia y guardá al terminar</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:3px">Marcá la asistencia y guardá al terminar</div>
             </div>
             <div style="display:flex;gap:8px">
               <button class="btn btn-ghost" onclick="cerrarClase()">← Volver</button>
@@ -474,6 +470,7 @@ textarea.form-input{min-height:70px;resize:vertical}
             <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><span class="dot" style="background:var(--green)"></span>Presente</span>
             <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><span class="dot" style="background:var(--red)"></span>Ausente</span>
             <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><span class="dot" style="background:var(--accent)"></span>Justificado</span>
+            <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><span class="dot" style="background:var(--text3)"></span>Doc. ausente</span>
           </div>
         </div>
 
@@ -1544,7 +1541,7 @@ async function showAlumnoView(alumno) {
   const [pRes,aRes,attRes,clasesRes,msgRes]=await Promise.all([
     sb.from('piezas').select('*').order('created_at'),
     sb.from('avisos').select('*').order('created_at',{ascending:false}),
-    sb.from('asistencia').select('*, clases(tipo, docente_ausente, camerata_activa, fecha)')
+    sb.from('asistencia').select('*, clases(tipo, camerata_activa, fecha)')
       .eq('estudiante_id', alumno.id).order('fecha',{ascending:false}),
 
     sb.from('clases').select('*').order('fecha',{ascending:false}),
@@ -1566,25 +1563,18 @@ async function showAlumnoView(alumno) {
   const attCamerata    = todasAsistencias.filter(a=>a.tipo==='camerata' &&
     (!alumno.camerata_desde || a.fecha >= alumno.camerata_desde));
 
-  // % instrumento: solo clases donde el alumno tiene registro (presente o ausente)
-  const attInstrValidas = attInstrumento.filter(a=>!a.clases?.docente_ausente);
-  const presInstr = attInstrValidas.filter(a=>a.presente).length;
+  // % instrumento: excluir presente=3 (docente ausente)
+  const attInstrValidas = attInstrumento.filter(a=>a.presente!==3);
+  const presInstr = attInstrValidas.filter(a=>a.presente===1).length;
   const pctInstr = attInstrValidas.length
     ? Math.round(presInstr / attInstrValidas.length * 100) : 0;
 
-  // % camerata: clases donde el alumno tiene registro desde camerata_desde
-  // + clases camerata sin registro = ausente implícito (el alumno fue habilitado pero no vino)
+  // % camerata: excluir presente=3
   let pctCam = null;
   if (alumno.camerata_habilitado) {
-    // clases camerata que existieron desde que fue habilitado
-    const clasesCam = todasClases.filter(c=>
-      (c.tipo==='camerata'||c.tipo==='ambas') &&
-      !c.docente_ausente &&
-      (!alumno.camerata_desde || c.fecha >= alumno.camerata_desde));
-    // de esas, cuántas tiene registro de presencia
-    const presCam = attCamerata.filter(a=>!a.clases?.docente_ausente && a.presente).length;
-    pctCam = clasesCam.length
-      ? Math.round(presCam / clasesCam.length * 100) : 0;
+    const camValidas = attCamerata.filter(a=>a.presente!==3);
+    const presCam = camValidas.filter(a=>a.presente===1).length;
+    pctCam = camValidas.length ? Math.round(presCam / camValidas.length * 100) : 0;
   }
 
   // piezas: se cargan desde alumno_piezas en el bloque de evaluacion
@@ -1680,22 +1670,23 @@ async function showAlumnoView(alumno) {
 
   // ── ASISTENCIA STRIP ──
   const stripEl=document.getElementById('alu-att-strip');
-  const ultimas = attInstrumento.slice(0,20).reverse();
-  if(ultimas.length){
-    const pips = ultimas.map(a=>`<div class="att-pip" title="${a.fecha}" style="background:${a.presente?'var(--green)':'var(--red)'}"></div>`).join('');
+  const ultimasInstr = attInstrumento.filter(a=>a.presente!==3).slice(0,20).reverse();
+  if(ultimasInstr.length){
+    const pips = ultimasInstr.map(a=>`<div class="att-pip" title="${a.fecha}" style="background:${a.presente===1?'var(--green)':a.presente===2?'var(--accent)':'var(--red)'}"></div>`).join('');
     let camHtml = '';
     if(alumno.camerata_habilitado && attCamerata.length){
-      const pipsCam = attCamerata.slice(0,20).reverse().map(a=>`<div class="att-pip" title="${a.fecha}" style="background:${a.presente?'var(--purple)':'var(--red)'}"></div>`).join('');
+      const ultimasCam = attCamerata.filter(a=>a.presente!==3).slice(0,20).reverse();
+      const pipsCam = ultimasCam.map(a=>`<div class="att-pip" title="${a.fecha}" style="background:${a.presente===1?'var(--purple)':a.presente===2?'var(--accent)':'var(--red)'}"></div>`).join('');
       camHtml = `<div style="margin-top:12px">
         <div style="font-size:11px;color:var(--text3);margin-bottom:4px">🎼 Camerata</div>
         <div class="att-strip">${pipsCam}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px">${pctCam}% de asistencia en ${attCamerata.length} clase(s)</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">${pctCam}% de asistencia en ${ultimasCam.length} clase(s)</div>
       </div>`;
     }
     stripEl.innerHTML=`
       <div style="font-size:11px;color:var(--text3);margin-bottom:4px">🎻 Instrumento</div>
       <div class="att-strip">${pips}</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:4px">${pctInstr}% de asistencia en ${ultimas.length} clase(s)</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">${pctInstr}% de asistencia en ${ultimasInstr.length} clase(s)</div>
       ${camHtml}`;
   } else {
     stripEl.innerHTML=`<div style="color:var(--text3);font-size:13px">Sin registros de asistencia aún.</div>`;
@@ -1857,8 +1848,8 @@ async function loadAll() {
     sb.from('piezas').select('*').order('created_at'),
     sb.from('evaluaciones').select('*').order('created_at',{ascending:false}),
     sb.from('avisos').select('*').order('created_at',{ascending:false}),
-    sb.from('asistencia').select('estudiante_id, presente, tipo, fecha, clases(docente_ausente)').order('fecha',{ascending:true}),
-    sb.from('clases').select('id, fecha, tipo, docente_ausente').order('fecha',{ascending:true})
+    sb.from('asistencia').select('estudiante_id, presente, tipo, fecha').order('fecha',{ascending:true}),
+    sb.from('clases').select('id, fecha, tipo').order('fecha',{ascending:true})
   ]);
   const attData = attRes.data||[];
   // filtrar clases por ciclo activo
@@ -1882,19 +1873,16 @@ async function loadAll() {
     // dots use full history (last 8 regardless of ciclo)
     const attInstrAll=attData.filter(x=>x.estudiante_id===st.id&&x.tipo==='instrumento');
     const attCamAll=attData.filter(x=>x.estudiante_id===st.id&&x.tipo==='camerata');
-    const attendance=attInstrAll.slice(-8).map(x=>x.presente?1:0);
-    const attendance_camerata=attCamAll.slice(-8).map(x=>x.presente?1:0);
-    const instrValidas=attInstr.filter(x=>!x.clases?.docente_ausente);
-    const pct_instrumento=instrValidas.length?Math.round(instrValidas.filter(x=>x.presente).length/instrValidas.length*100):0;
+    const attendance=attInstrAll.slice(-8).map(x=>x.presente===1?1:0);
+    const attendance_camerata=attCamAll.slice(-8).map(x=>x.presente===1?1:0);
+    const instrValidas=attInstr.filter(x=>x.presente!==3);
+    const pct_instrumento=instrValidas.length?Math.round(instrValidas.filter(x=>x.presente===1).length/instrValidas.length*100):0;
     // camerata: usar total de clases que existieron desde camerata_desde como denominador
     let pct_camerata=null;
     if(st.camerata_habilitado){
-      const clasesCam=todasClases.filter(c=>
-        (c.tipo==='camerata'||c.tipo==='ambas')&&!c.docente_ausente&&
-        (!st.camerata_desde||c.fecha>=st.camerata_desde));
-      const presCam=attCam.filter(x=>!x.clases?.docente_ausente&&
-        (!st.camerata_desde||x.fecha>=st.camerata_desde)&&x.presente).length;
-      pct_camerata=clasesCam.length?Math.round(presCam/clasesCam.length*100):0;
+      const camValidas=attCam.filter(x=>x.presente!==3&&(!st.camerata_desde||x.fecha>=st.camerata_desde));
+      const presCam=camValidas.filter(x=>x.presente===1).length;
+      pct_camerata=camValidas.length?Math.round(presCam/camValidas.length*100):0;
     }
     return{...st,attendance,attendance_camerata,pct_instrumento,pct_camerata};
   });
@@ -2043,7 +2031,7 @@ async function renderCalendar() {
   // cargar clases del mes
   const desde = `${calYear}-${String(calMonth+1).padStart(2,'0')}-01`;
   const hasta = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${new Date(calYear,calMonth+1,0).getDate()}`;
-  const {data:clasesDelMes} = await sb.from('clases').select('fecha,tipo,docente_ausente')
+  const {data:clasesDelMes} = await sb.from('clases').select('fecha,tipo')
     .gte('fecha',desde).lte('fecha',hasta);
 
   const clasesPorDia = {};
@@ -2064,7 +2052,7 @@ async function renderCalendar() {
   for(let i=0;i<first;i++) html+=`<div class="cal-day"></div>`;
   for(let d=1;d<=days;d++){
     const clases=clasesPorDia[d]||[];
-    const dots=clases.map(c=>`<span style="width:5px;height:5px;border-radius:50%;background:${c.docente_ausente?'var(--red)':tipoColor[c.tipo]};display:inline-block;margin:0 1px"></span>`).join('');
+    const dots=clases.map(c=>`<span style="width:5px;height:5px;border-radius:50%;background:${tipoColor[c.tipo]};display:inline-block;margin:0 1px"></span>`).join('');
     html+=`<div class="cal-day${esHoy(d)?' today':''}" style="flex-direction:column;gap:2px;font-size:10px">
       <span>${d}</span>${dots?`<div style="display:flex;justify-content:center">${dots}</div>`:''}
     </div>`;
@@ -2076,10 +2064,10 @@ async function renderCalendar() {
   const tipoLabel={instrumento:'Instrumento',camerata:'Camerata',ambas:'Instr. + Camerata'};
   document.getElementById('cal-clases-lista').innerHTML = lista.length
     ? lista.map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-        <div style="width:8px;height:8px;border-radius:50%;background:${c.docente_ausente?'var(--red)':tipoColor[c.tipo]};flex-shrink:0"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:${tipoColor[c.tipo]};flex-shrink:0"></div>
         <div style="flex:1">
           <div style="font-size:12px;font-weight:500">${c.fecha}</div>
-          <div style="font-size:11px;color:var(--text2)">${tipoLabel[c.tipo]}${c.docente_ausente?' — <span style="color:var(--red)">Docente ausente</span>':''}</div>
+          <div style="font-size:11px;color:var(--text2)">${tipoLabel[c.tipo]}</div>
         </div>
       </div>`).join('')
     : '<div class="empty">Sin clases registradas este mes</div>';
@@ -2567,7 +2555,6 @@ async function abrirClase() {
   const fecha = document.getElementById('clase-fecha').value;
   if (!fecha) { showToast('Seleccioná una fecha'); return; }
   const tipo = document.getElementById('clase-tipo').value;
-  const docente_ausente = document.getElementById('clase-docente-ausente').checked;
   const camerata_activa = document.getElementById('clase-camerata-activa').checked;
 
   // buscar si ya existe esa clase
@@ -2578,7 +2565,7 @@ async function abrirClase() {
     showToast('Clase ya registrada — editando asistencia');
   } else {
     const { data, error } = await sb.from('clases').insert({
-      fecha, tipo, docente_ausente,
+      fecha, tipo,
       camerata_activa: tipo === 'instrumento' ? false : camerata_activa,
       docente_id: currentUser.id
     }).select().single();
@@ -2591,7 +2578,7 @@ async function abrirClase() {
   const { data: attExistente } = await sb.from('asistencia').select('*').eq('clase_id', clase.id);
   todayAttendance = {};
   (attExistente || []).forEach(a => {
-    todayAttendance[`${a.estudiante_id}_${a.tipo}`] = a.presente ? 1 : 0;
+    todayAttendance[`${a.estudiante_id}_${a.tipo}`] = a.presente;
   });
 
   // mostrar paso 2
@@ -2625,28 +2612,29 @@ function renderAttendance() {
   if (!claseActiva) return;
   const tipo = claseActiva.tipo;
 
+  const attBtn = (id, tipoCls, v, lbl, ac, ic) => {
+    const key = `${id}_${tipoCls}`;
+    const val = todayAttendance[key] ?? null;
+    return `<button class="btn" style="padding:4px 10px;font-size:11px;background:${val===v?ac:'var(--surface2)'};color:${val===v?ic:'var(--text2)'};border:1px solid ${val===v?ac:'var(--border)'}" onclick="markAtt(${id},'${tipoCls}',${v})">${lbl}</button>`;
+  };
+
   // tabla instrumento
   if (tipo !== 'camerata') {
-    const docenteAusente = claseActiva.docente_ausente;
-    const avisoEl = document.getElementById('att-docente-aviso');
-    if (docenteAusente) {
-      avisoEl.innerHTML = '<div class="docente-ausente-aviso">⚠️ Docente ausente — esta clase <strong>no contará</strong> para el porcentaje de asistencia. Podés igualmente registrar quiénes vinieron.</div>';
-    } else {
-      avisoEl.textContent = 'Marcá la asistencia y guardá al terminar';
-    }
     const studentsFiltered = attInstrFilter === 'Todos'
       ? students
       : students.filter(s => s.instrumento === attInstrFilter);
     document.getElementById('att-tbody-instrumento').innerHTML = studentsFiltered.map(s => {
-      const key = `${s.id}_instrumento`;
-      const val = todayAttendance[key] ?? null;
       const pct = s.pct_instrumento||0;
       const pc = pct >= 80 ? 'var(--green)' : pct >= 60 ? 'var(--accent)' : 'var(--red)';
-      const btn = (v, lbl, ac, ic) => `<button class="btn" style="padding:4px 10px;font-size:11px;background:${val===v?ac:'var(--surface2)'};color:${val===v?ic:'var(--text2)'};border:1px solid ${val===v?ac:'var(--border)'}" onclick="markAtt(${s.id},'instrumento',${v})">${lbl}</button>`;
       return `<tr>
         <td style="padding-left:16px"><span class="sname">${av(s)} ${s.nombre} ${s.apellido||''}</span></td>
         <td style="color:var(--text2)">${s.instrumento}</td>
-        <td><div style="display:flex;gap:5px;justify-content:center">${btn(1,'✓','var(--green)','#0f0e0c')}${btn(0,'✗','var(--red)','#fff')}${btn(2,'J','var(--accent)','#0f0e0c')}</div></td>
+        <td><div style="display:flex;gap:5px;justify-content:center">
+          ${attBtn(s.id,'instrumento',1,'✓','var(--green)','#0f0e0c')}
+          ${attBtn(s.id,'instrumento',0,'✗','var(--red)','#fff')}
+          ${attBtn(s.id,'instrumento',2,'J','var(--accent)','#0f0e0c')}
+          ${attBtn(s.id,'instrumento',3,'D','var(--text3)','#fff')}
+        </div></td>
         <td>${dots(s.attendance||[])}</td>
         <td><span style="font-family:'DM Mono',monospace;font-size:13px;color:${pc}">${pct}%</span></td>
       </tr>`;
@@ -2658,15 +2646,17 @@ function renderAttendance() {
     const habilitados = students.filter(s => s.camerata_habilitado);
     document.getElementById('att-tbody-camerata').innerHTML = habilitados.length ?
       habilitados.map(s => {
-        const key = `${s.id}_camerata`;
-        const val = todayAttendance[key] ?? null;
         const pct = s.pct_camerata!=null ? s.pct_camerata : 0;
         const pc = pct >= 80 ? 'var(--green)' : pct >= 60 ? 'var(--accent)' : 'var(--red)';
-        const btn = (v, lbl, ac, ic) => `<button class="btn" style="padding:4px 10px;font-size:11px;background:${val===v?ac:'var(--surface2)'};color:${val===v?ic:'var(--text2)'};border:1px solid ${val===v?ac:'var(--border)'}" onclick="markAtt(${s.id},'camerata',${v})">${lbl}</button>`;
         return `<tr>
           <td style="padding-left:16px"><span class="sname">${av(s)} ${s.nombre} ${s.apellido||''}</span></td>
           <td style="color:var(--text2)">${s.instrumento}</td>
-          <td><div style="display:flex;gap:5px;justify-content:center">${btn(1,'✓','var(--green)','#0f0e0c')}${btn(0,'✗','var(--red)','#fff')}${btn(2,'J','var(--accent)','#0f0e0c')}</div></td>
+          <td><div style="display:flex;gap:5px;justify-content:center">
+            ${attBtn(s.id,'camerata',1,'✓','var(--green)','#0f0e0c')}
+            ${attBtn(s.id,'camerata',0,'✗','var(--red)','#fff')}
+            ${attBtn(s.id,'camerata',2,'J','var(--accent)','#0f0e0c')}
+            ${attBtn(s.id,'camerata',3,'D','var(--text3)','#fff')}
+          </div></td>
           <td>${dots(s.attendance_camerata||[])}</td>
           <td><span style="font-family:'DM Mono',monospace;font-size:13px;color:${pc}">${pct}%</span></td>
         </tr>`;
@@ -2687,7 +2677,7 @@ async function saveAttendance() {
     return {
       estudiante_id: parseInt(id),
       fecha: claseActiva.fecha,
-      presente: val === 1,
+      presente: val,
       tipo,
       clase_id: claseActiva.id,
       docente_id: currentUser.id
