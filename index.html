@@ -145,6 +145,8 @@ textarea.form-input{min-height:70px;resize:vertical}
 
 /* REP FILTERS */
 .rep-fi.active,.rep-fn.active{background:rgba(201,168,76,.15);border-color:var(--accent);color:var(--accent2);}
+/* EST STATUS FILTER */
+.est-sf.active{background:rgba(201,168,76,.15);border-color:var(--accent);color:var(--accent2);}
 /* REP FILTERS */
 .rep-fi.active,.rep-fn.active{background:rgba(201,168,76,.15);border-color:var(--accent);color:var(--accent2);}
 /* SEMAFORO */
@@ -370,12 +372,18 @@ textarea.form-input{min-height:70px;resize:vertical}
         <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
           <button class="btn btn-primary" onclick="openModal('modal-nuevo')">+ Nuevo estudiante</button>
         </div>
-        <div class="tabs">
-          <div class="tab active" onclick="setInstrTab('Todos',this)">Todos</div>
-          <div class="tab" onclick="setInstrTab('Violín',this)">Violines</div>
-          <div class="tab" onclick="setInstrTab('Viola',this)">Violas</div>
-          <div class="tab" onclick="setInstrTab('Cello',this)">Cellos</div>
-          <div class="tab" onclick="setInstrTab('Contrabajo',this)">Contrabajos</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border);margin-bottom:20px">
+          <div style="display:flex;gap:2px">
+            <div class="tab active" style="margin-bottom:-1px" onclick="setInstrTab('Todos',this)">Todos</div>
+            <div class="tab" style="margin-bottom:-1px" onclick="setInstrTab('Violín',this)">Violines</div>
+            <div class="tab" style="margin-bottom:-1px" onclick="setInstrTab('Viola',this)">Violas</div>
+            <div class="tab" style="margin-bottom:-1px" onclick="setInstrTab('Cello',this)">Cellos</div>
+            <div class="tab" style="margin-bottom:-1px" onclick="setInstrTab('Contrabajo',this)">Contrabajos</div>
+          </div>
+          <div style="display:flex;gap:6px;padding-bottom:1px">
+            <button class="btn btn-ghost btn-sm est-sf active" onclick="setStatusFilter('activos',this)">Activos</button>
+            <button class="btn btn-ghost btn-sm est-sf" onclick="setStatusFilter('inactivos',this)" style="color:var(--text3)">Inactivos</button>
+          </div>
         </div>
         <div class="card" style="padding:0">
           <table><thead><tr>
@@ -479,7 +487,7 @@ textarea.form-input{min-height:70px;resize:vertical}
       <!-- REPERTORIO -->
       <div id="view-repertorio" class="view">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div style="font-size:13px;color:var(--text2)" id="rep-total-label"></div>
+          <div style="font-size:13px;color:var(--text2)">Ciclo 2025 · Cuerdas</div>
           <button class="btn btn-primary" onclick="openModal('modal-pieza')">+ Agregar pieza</button>
         </div>
 
@@ -1369,7 +1377,7 @@ const sb = createClient(
 // ── STATE ─────────────────────────────────────────────────────
 let students=[], pieces=[], evaluations=[], avisos=[];
 let todayAttendance={};
-let currentDetailId=null, instrFilter='Todos';
+let currentDetailId=null, instrFilter='Todos', statusFilter='activos';
 let authMode='login';
 let currentUser=null, currentDocente=null;
 let currentAlumno=null;
@@ -1922,11 +1930,13 @@ function renderStudents(q='') {
   const f=students.filter(s=>{
     const mq=!q||`${s.nombre} ${s.apellido} ${s.instrumento}`.toLowerCase().includes(q.toLowerCase());
     const mi=instrFilter==='Todos'||s.instrumento===instrFilter;
-    return mq&&mi;
+    const ms=statusFilter==='inactivos' ? s.status==='Inactivo' : s.status!=='Inactivo';
+    return mq&&mi&&ms;
   });
+  const esInactivo = statusFilter==='inactivos';
   document.getElementById('students-tbody').innerHTML=f.length?f.map(s=>`
-    <tr style="cursor:pointer" onclick="openStudentDetail(${s.id})">
-      <td style="padding-left:16px"><span class="sname">${av(s)} ${s.nombre} ${s.apellido||''}</span></td>
+    <tr style="cursor:pointer;opacity:${esInactivo?'.55':'1'}" onclick="openStudentDetail(${s.id})">
+      <td style="padding-left:16px"><span class="sname">${av(s)} ${s.nombre} ${s.apellido||''}</span>${esInactivo?'<span style="font-size:10px;color:var(--text3);margin-left:6px">Inactivo</span>':''}</td>
       <td style="color:var(--text2)">${s.instrumento}</td>
       
       <td>${dots(s.attendance)}</td>
@@ -1941,7 +1951,7 @@ function renderStudents(q='') {
       </td>
       <td><span class="codigo-badge">${s.codigo_acceso||'—'}</span></td>
       <td><button class="btn btn-ghost" style="font-size:11px;padding:3px 9px" onclick="event.stopPropagation();openStudentDetail(${s.id})">Ver</button></td>
-    </tr>`).join(''):'<tr><td colspan="9" class="empty">Sin resultados</td></tr>';
+    </tr>`).join(''):`<tr><td colspan="9" class="empty">${esInactivo?'Sin estudiantes inactivos':'Sin resultados'}</td></tr>`;
 }
 
 // renderAttendance — movida a la sección ATTENDANCE (abrirClase)
@@ -1962,57 +1972,22 @@ function renderPieces() {
     const matchN = repNivelFilter==='Todos' || !p.niveles?.length || p.niveles.includes(repNivelFilter);
     return matchI && matchN;
   });
-
-  // Ordenar alfabéticamente por título
-  filtered.sort((a,b)=>a.titulo.localeCompare(b.titulo,'es',{sensitivity:'base'}));
-
-  // Actualizar contador
-  const labelEl = document.getElementById('rep-total-label');
-  if(labelEl) labelEl.textContent = `${filtered.length} pieza${filtered.length!==1?'s':''} en el repertorio`;
-
-  if(!filtered.length){
-    document.getElementById('pieces-tbody').innerHTML=`<tr><td colspan="5" class="empty">${pieces.length?'Sin piezas para ese filtro':'Sin piezas aún'}</td></tr>`;
-    return;
-  }
-
-  // Agrupar por año usando created_at
-  const getAnio = p => p.created_at ? new Date(p.created_at).getFullYear() : new Date().getFullYear();
-  const grupos = {};
-  filtered.forEach(p=>{
-    const anio = getAnio(p);
-    if(!grupos[anio]) grupos[anio]=[];
-    grupos[anio].push(p);
-  });
-
-  // Años de más reciente a más antiguo
-  const anios = Object.keys(grupos).map(Number).sort((a,b)=>b-a);
-
-  const rows = [];
-  anios.forEach(anio=>{
-    rows.push(`<tr>
-      <td colspan="5" style="padding:10px 16px 6px;background:var(--surface2);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);border-top:1px solid var(--border)">
-        ♩ ${anio}
+  document.getElementById('pieces-tbody').innerHTML=filtered.length?filtered.map(p=>`
+    <tr>
+      <td style="padding-left:16px;font-weight:500">${p.titulo}</td>
+      <td style="color:var(--text2)">${p.compositor||'—'}</td>
+      <td><span class="badge" style="background:${stateColor[p.estado]||'var(--text3)'}22;color:${stateColor[p.estado]||'var(--text3)'}">${p.estado}</span></td>
+      
+      <td class="piece-links">
+        ${p.pdf_url?`<a class="piece-link" href="${p.pdf_url}" target="_blank">PDF</a>`:''}
+        ${p.audio_url?`<a class="piece-link" href="${p.audio_url}" target="_blank">Audio</a>`:''}
+        ${p.link_externo?`<a class="piece-link" href="${p.link_externo}" target="_blank">Link</a>`:''}
       </td>
-    </tr>`);
-    grupos[anio].forEach(p=>{
-      rows.push(`<tr>
-        <td style="padding-left:16px;font-weight:500">${p.titulo}</td>
-        <td style="color:var(--text2)">${p.compositor||'—'}</td>
-        <td><span class="badge" style="background:${stateColor[p.estado]||'var(--text3)'}22;color:${stateColor[p.estado]||'var(--text3)'}">${p.estado}</span></td>
-        <td class="piece-links">
-          ${p.pdf_url?`<a class="piece-link" href="${p.pdf_url}" target="_blank">PDF</a>`:''}
-          ${p.audio_url?`<a class="piece-link" href="${p.audio_url}" target="_blank">Audio</a>`:''}
-          ${p.link_externo?`<a class="piece-link" href="${p.link_externo}" target="_blank">Link</a>`:''}
-        </td>
-        <td style="white-space:nowrap">
-          <button class="btn btn-ghost btn-sm" onclick="openEditPieza(${p.id})" style="margin-right:4px">✎</button>
-          <button class="btn btn-ghost btn-sm" onclick="deletePieza(${p.id})" style="color:var(--red)">✕</button>
-        </td>
-      </tr>`);
-    });
-  });
-
-  document.getElementById('pieces-tbody').innerHTML = rows.join('');
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="openEditPieza(${p.id})" style="margin-right:4px">✎</button>
+        <button class="btn btn-ghost btn-sm" onclick="deletePieza(${p.id})" style="color:var(--red)">✕</button>
+      </td>
+    </tr>`).join(''):`<tr><td colspan="7" class="empty">${pieces.length?'Sin piezas para ese filtro':'Sin piezas aún'}</td></tr>`;
 }
 
 // ── RENDER: AVISOS ────────────────────────────────────────────
@@ -2147,7 +2122,13 @@ function showView(name,el) {
 
 function setInstrTab(val,el) {
   instrFilter=val;
-  el.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.closest('div').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderStudents(document.getElementById('searchInput').value);
+}
+function setStatusFilter(val,el) {
+  statusFilter=val;
+  document.querySelectorAll('.est-sf').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   renderStudents(document.getElementById('searchInput').value);
 }
