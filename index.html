@@ -1546,17 +1546,18 @@ async function showAlumnoView(alumno) {
     d.setDate(d.getDate()-day+(day===0?-6:1));
     return d.toISOString().split('T')[0];
   })();
-  const [pRes,aRes,attRes,clasesRes,msgRes]=await Promise.all([
+  const [pRes,aRes,attRes,clasesRes,msgRes,apRes]=await Promise.all([
     sb.from('piezas').select('*').order('created_at'),
     sb.from('avisos').select('*').order('created_at',{ascending:false}),
     sb.from('asistencia').select('*, clases(tipo, camerata_activa, fecha)')
       .eq('estudiante_id', alumno.id).order('fecha',{ascending:false}),
-
     sb.from('clases').select('*').order('fecha',{ascending:false}),
-    sb.from('mensajes_semana').select('*').eq('estudiante_id',alumno.id).eq('semana',semanaActual).maybeSingle()
+    sb.from('mensajes_semana').select('*').eq('estudiante_id',alumno.id).eq('semana',semanaActual).maybeSingle(),
+    sb.from('alumno_piezas').select('pieza_id').eq('estudiante_id', alumno.id)
   ]);
 
   const allPiezas=pRes.data||[];
+  const piezasIds = new Set((apRes.data||[]).map(x=>x.pieza_id));
   console.log('piezas:', pRes.data);
   console.log('alumno nivel:', alumno.nivel, 'instrumento:', alumno.instrumento);
   const allAvisos=aRes.data||[];
@@ -1614,12 +1615,8 @@ async function showAlumnoView(alumno) {
     camSec.style.display = 'block';
     document.getElementById('alu-camerata-fecha').textContent = `Fecha: ${proxCam.fecha}`;
     const ids = (proxCam.agenda_piezas||[]).map(x=>x.pieza_id);
-    const piezasCam = allPiezas.filter(p=>{
-      if(!ids.includes(p.id)) return false;
-      const mN = !p.niveles?.length || p.niveles.includes(alumno.nivel);
-      const mI = !p.instrumentos?.length || p.instrumentos.includes(alumno.instrumento);
-      return mN && mI;
-    });
+    // solo piezas de la agenda que además estén asignadas a este alumno
+    const piezasCam = allPiezas.filter(p=>ids.includes(p.id) && piezasIds.has(p.id));
     document.getElementById('alu-camerata-piezas').innerHTML = piezasCam.length
       ? piezasCam.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
           <span style="font-size:13px;font-weight:500">${p.titulo}</span>
@@ -1717,9 +1714,7 @@ async function showAlumnoView(alumno) {
       : '<div style="color:var(--text3);font-size:13px">Sin devoluciones aún.</div>';
   }
 
-  // partituras asignadas al alumno
-  const {data:apData} = await sb.from('alumno_piezas').select('pieza_id').eq('estudiante_id', alumno.id);
-  const piezasIds = new Set((apData||[]).map(x=>x.pieza_id));
+  // partituras asignadas al alumno (piezasIds ya cargado arriba)
   const piezasFiltradas = allPiezas.filter(p=>piezasIds.has(p.id));
 
   // avisos
@@ -2420,41 +2415,19 @@ async function loadDevolucionesAlumno() {
 async function loadPartiturasAlumno() {
   const el = document.getElementById('partituras-checks');
   el.innerHTML = '<div style="color:var(--text3);font-size:12px">Cargando…</div>';
-  // cargar asignaciones actuales
-  const { data: asignadas } = await sb.from('alumno_piezas')
-    .select('pieza_id').eq('estudiante_id', currentDetailId);
-  const idsAsignadas = (asignadas||[]).map(x=>x.pieza_id);
-  el.innerHTML = pieces.length ? pieces.map(p=>`
-    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;background:var(--surface2);border-radius:7px;border:1px solid var(--border)">
-      <input type="checkbox" value="${p.id}" ${idsAsignadas.includes(p.id)?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;flex-shrink:0">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:500">${p.titulo}</div>
-        <div style="font-size:11px;color:var(--text3)">${p.compositor||''} ${p.estado?'· '+p.estado:''}</div>
-      </div>
-      ${p.pdf_url?`<a href="${p.pdf_url}" target="_blank" onclick="event.stopPropagation()" class="pieza-btn" style="font-size:10px">PDF</a>`:''}
-    </label>`).join('')
-    : '<div class="empty">Sin partituras en el repositorio aún.</div>';
-}
-
-async function savePartiturasAlumno() {
-  // borrar asignaciones actuales
-  await sb.from('alumno_piezas').delete().eq('estudiante_id', currentDetailId);
-  // insertar las seleccionadas
-  const checks = [...document.querySelectorAll('#partituras-checks input:checked')];
-  if (checks.length) {
-    const rows = checks.map(c=>({ estudiante_id: currentDetailId, pieza_id: parseInt(c.value), docente_id: currentUser.id }));
-    const { error } = await sb.from('alumno_piezas').insert(rows);
-    if (error) { showToast('Error: '+error.message); return; }
-  }
-  showToast('Partituras asignadas ✓');
-}
-
-async function loadPartiturasAlumno() {
-  const el = document.getElementById('partituras-checks');
-  el.innerHTML = '<div style="color:var(--text3);font-size:12px">Cargando…</div>';
   const { data: asignadas } = await sb.from('alumno_piezas').select('pieza_id').eq('estudiante_id', currentDetailId);
   const idsAsignadas = (asignadas||[]).map(x=>x.pieza_id);
-  el.innerHTML = pieces.length ? pieces.map(p=>`
+  if (!pieces.length) { el.innerHTML = '<div class="empty">Sin partituras en el repositorio aún.</div>'; return; }
+  const anioActual = new Date().getFullYear();
+  const sorted = [...pieces].sort((a,b)=>a.titulo.localeCompare(b.titulo,'es'));
+  const grupos = {};
+  sorted.forEach(p=>{
+    const anio = p.created_at ? new Date(p.created_at).getFullYear() : anioActual;
+    if (!grupos[anio]) grupos[anio] = [];
+    grupos[anio].push(p);
+  });
+  const anios = Object.keys(grupos).sort((a,b)=>b-a);
+  const renderLabel = p => `
     <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:8px 10px;background:var(--surface2);border-radius:7px;border:1px solid var(--border)">
       <input type="checkbox" value="${p.id}" ${idsAsignadas.includes(p.id)?'checked':''} style="accent-color:var(--accent);width:16px;height:16px;flex-shrink:0">
       <div style="flex:1;min-width:0">
@@ -2462,8 +2435,22 @@ async function loadPartiturasAlumno() {
         <div style="font-size:11px;color:var(--text3)">${p.compositor||''} ${p.estado?'· '+p.estado:''}</div>
       </div>
       ${p.pdf_url?`<a href="${p.pdf_url}" target="_blank" onclick="event.stopPropagation()" style="font-size:10px;padding:2px 8px;border:1px solid var(--border);border-radius:5px;color:var(--text2);text-decoration:none">PDF</a>`:''}
-    </label>`).join('')
-    : '<div class="empty">Sin partituras en el repositorio aún.</div>';
+    </label>`;
+  el.innerHTML = anios.map(anio=>{
+    const esActual = parseInt(anio) === anioActual;
+    const id = 'grp-alumno-' + anio;
+    return `<div style="margin-bottom:6px">
+      <div onclick="const d=document.getElementById('${id}');const arr=this.querySelector('.arr');const open=d.style.display!=='none';d.style.display=open?'none':'flex';arr.textContent=open?'▶':'▼';"
+        style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:4px 2px;user-select:none">
+        <span class="arr" style="font-size:10px;color:var(--accent)">${esActual?'▼':'▶'}</span>
+        <span style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">${anio}</span>
+        <span style="font-size:10px;color:var(--text3)">(${grupos[anio].length})</span>
+      </div>
+      <div id="${id}" style="display:${esActual?'flex':'none'};flex-direction:column;gap:5px;padding-left:14px">
+        ${grupos[anio].map(renderLabel).join('')}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 async function savePartiturasAlumno() {
@@ -3153,13 +3140,36 @@ function initAgenda() {
 
 function abrirModalAgenda() {
   const el = document.getElementById('agenda-piezas-checks');
-  el.innerHTML = pieces.filter(p=>!p.done).map(p=>`
+  const anioActual = new Date().getFullYear();
+  const disponibles = [...pieces].sort((a,b)=>a.titulo.localeCompare(b.titulo,'es'));
+  const grupos = {};
+  disponibles.forEach(p=>{
+    const anio = p.created_at ? new Date(p.created_at).getFullYear() : anioActual;
+    if (!grupos[anio]) grupos[anio] = [];
+    grupos[anio].push(p);
+  });
+  const anios = Object.keys(grupos).sort((a,b)=>b-a);
+  const renderCb = p => `
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2);padding:4px 0">
       <input type="checkbox" class="agenda-pieza-cb" value="${p.id}" style="accent-color:var(--accent)">
       <span style="font-weight:500">${p.titulo}</span>
-      ${p.niveles?.length ? `<span style="font-size:10px;color:var(--text3)">${p.niveles.join(', ')}</span>` : ''}
-      ${p.instrumentos?.length ? `<span style="font-size:10px;color:var(--text3)">· ${p.instrumentos.join(', ')}</span>` : ''}
-    </label>`).join('');
+      <span style="font-size:11px;color:var(--text3)">${p.compositor||''}</span>
+    </label>`;
+  el.innerHTML = anios.length ? anios.map(anio=>{
+    const esActual = parseInt(anio) === anioActual;
+    const id = 'grp-agenda-' + anio;
+    return `<div style="margin-bottom:4px">
+      <div onclick="const d=document.getElementById('${id}');const arr=this.querySelector('.arr');const open=d.style.display!=='none';d.style.display=open?'none':'flex';arr.textContent=open?'▶':'▼';"
+        style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:3px 2px;user-select:none">
+        <span class="arr" style="font-size:10px;color:var(--accent)">${esActual?'▼':'▶'}</span>
+        <span style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">${anio}</span>
+        <span style="font-size:10px;color:var(--text3)">(${grupos[anio].length})</span>
+      </div>
+      <div id="${id}" style="display:${esActual?'flex':'none'};flex-direction:column;gap:2px;padding-left:14px">
+        ${grupos[anio].map(renderCb).join('')}
+      </div>
+    </div>`;
+  }).join('') : '<div style="color:var(--text3);font-size:12px">Sin piezas en el repositorio.</div>';
   document.getElementById('agenda-fecha').value = '';
   document.getElementById('agenda-mensaje').value = '';
   document.getElementById('modal-agenda').classList.add('open');
@@ -3240,29 +3250,6 @@ function initAgenda() {
   document.getElementById('modal-agenda').addEventListener('click', function(e){ if(e.target===this) cerrarModalAgenda(); });
 }
 
-function abrirModalAgenda() {
-  const el = document.getElementById('agenda-piezas-checks');
-  el.innerHTML = pieces.filter(p=>!p.done).map(p=>`
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2);padding:4px 0">
-      <input type="checkbox" class="agenda-pieza-cb" value="${p.id}" style="accent-color:var(--accent)">
-      <span style="font-weight:500">${p.titulo}</span>
-      ${p.niveles?.length?`<span style="font-size:10px;color:var(--text3)">${p.niveles.join(', ')}</span>`:''}
-      ${p.instrumentos?.length?`<span style="font-size:10px;color:var(--text3)">· ${p.instrumentos.join(', ')}</span>`:''}
-    </label>`).join('');
-  document.getElementById('agenda-fecha').value = '';
-  document.getElementById('agenda-mensaje').value = '';
-  document.getElementById('modal-agenda').classList.add('open');
-}
-
-function cerrarModalAgenda() {
-  document.getElementById('modal-agenda').classList.remove('open');
-}
-
-async function loadAgenda() {
-  const { data } = await sb.from('agenda_camerata').select('*, agenda_piezas(pieza_id)').order('fecha',{ascending:true});
-  agendaData = data || [];
-  renderAgenda();
-}
 
 function renderAgenda() {
   const el = document.getElementById('agenda-lista');
