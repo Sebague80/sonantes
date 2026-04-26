@@ -487,7 +487,7 @@ textarea.form-input{min-height:70px;resize:vertical}
       <!-- REPERTORIO -->
       <div id="view-repertorio" class="view">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div style="font-size:13px;color:var(--text2)">Ciclo 2025 · Cuerdas</div>
+          <div style="font-size:13px;color:var(--text2)" id="rep-total-label"></div>
           <button class="btn btn-primary" onclick="openModal('modal-pieza')">+ Agregar pieza</button>
         </div>
 
@@ -1972,22 +1972,57 @@ function renderPieces() {
     const matchN = repNivelFilter==='Todos' || !p.niveles?.length || p.niveles.includes(repNivelFilter);
     return matchI && matchN;
   });
-  document.getElementById('pieces-tbody').innerHTML=filtered.length?filtered.map(p=>`
-    <tr>
-      <td style="padding-left:16px;font-weight:500">${p.titulo}</td>
-      <td style="color:var(--text2)">${p.compositor||'—'}</td>
-      <td><span class="badge" style="background:${stateColor[p.estado]||'var(--text3)'}22;color:${stateColor[p.estado]||'var(--text3)'}">${p.estado}</span></td>
-      
-      <td class="piece-links">
-        ${p.pdf_url?`<a class="piece-link" href="${p.pdf_url}" target="_blank">PDF</a>`:''}
-        ${p.audio_url?`<a class="piece-link" href="${p.audio_url}" target="_blank">Audio</a>`:''}
-        ${p.link_externo?`<a class="piece-link" href="${p.link_externo}" target="_blank">Link</a>`:''}
+
+  // Ordenar alfabéticamente por título
+  filtered.sort((a,b)=>a.titulo.localeCompare(b.titulo,'es',{sensitivity:'base'}));
+
+  // Actualizar contador
+  const labelEl = document.getElementById('rep-total-label');
+  if(labelEl) labelEl.textContent = `${filtered.length} pieza${filtered.length!==1?'s':''} en el repertorio`;
+
+  if(!filtered.length){
+    document.getElementById('pieces-tbody').innerHTML=`<tr><td colspan="5" class="empty">${pieces.length?'Sin piezas para ese filtro':'Sin piezas aún'}</td></tr>`;
+    return;
+  }
+
+  // Agrupar por año usando created_at
+  const getAnio = p => p.created_at ? new Date(p.created_at).getFullYear() : new Date().getFullYear();
+  const grupos = {};
+  filtered.forEach(p=>{
+    const anio = getAnio(p);
+    if(!grupos[anio]) grupos[anio]=[];
+    grupos[anio].push(p);
+  });
+
+  // Años de más reciente a más antiguo
+  const anios = Object.keys(grupos).map(Number).sort((a,b)=>b-a);
+
+  const rows = [];
+  anios.forEach(anio=>{
+    rows.push(`<tr>
+      <td colspan="5" style="padding:10px 16px 6px;background:var(--surface2);font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);border-top:1px solid var(--border)">
+        ♩ ${anio}
       </td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" onclick="openEditPieza(${p.id})" style="margin-right:4px">✎</button>
-        <button class="btn btn-ghost btn-sm" onclick="deletePieza(${p.id})" style="color:var(--red)">✕</button>
-      </td>
-    </tr>`).join(''):`<tr><td colspan="7" class="empty">${pieces.length?'Sin piezas para ese filtro':'Sin piezas aún'}</td></tr>`;
+    </tr>`);
+    grupos[anio].forEach(p=>{
+      rows.push(`<tr>
+        <td style="padding-left:16px;font-weight:500">${p.titulo}</td>
+        <td style="color:var(--text2)">${p.compositor||'—'}</td>
+        <td><span class="badge" style="background:${stateColor[p.estado]||'var(--text3)'}22;color:${stateColor[p.estado]||'var(--text3)'}">${p.estado}</span></td>
+        <td class="piece-links">
+          ${p.pdf_url?`<a class="piece-link" href="${p.pdf_url}" target="_blank">PDF</a>`:''}
+          ${p.audio_url?`<a class="piece-link" href="${p.audio_url}" target="_blank">Audio</a>`:''}
+          ${p.link_externo?`<a class="piece-link" href="${p.link_externo}" target="_blank">Link</a>`:''}
+        </td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" onclick="openEditPieza(${p.id})" style="margin-right:4px">✎</button>
+          <button class="btn btn-ghost btn-sm" onclick="deletePieza(${p.id})" style="color:var(--red)">✕</button>
+        </td>
+      </tr>`);
+    });
+  });
+
+  document.getElementById('pieces-tbody').innerHTML = rows.join('');
 }
 
 // ── RENDER: AVISOS ────────────────────────────────────────────
